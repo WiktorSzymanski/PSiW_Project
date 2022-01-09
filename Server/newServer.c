@@ -31,17 +31,22 @@ struct Client {
   char name[19];
   long mtypeClient;
 } CLIENT_LIST[5] = {
-  {"0",1},
-  {"0",1},
-  {"0",1},
-  {"0",1},
-  {"0",1}
+  {"0",0},
+  {"0",0},
+  {"0",0},
+  {"0",0},
+  {"0",0}
 };
 
 struct Msg {
   long mtype;
   char message[1024];
 };
+
+// struct nameChangeMsg {
+//   long mtype;
+  
+// }
 
 void printClient(struct Client toPrint) {
   printf("%s\t%ld\n",toPrint.name,toPrint.mtypeClient);
@@ -63,6 +68,30 @@ void sendConnectionEstablishedMsg(long mtypeClient) {
   msgsnd(KEY, &message, sizeof(message), 0);
   printf("Wyslano wiadomosc do klienta o mtype: %ld\n",mtypeClient);
 }
+
+void disconnectClient() {
+  struct ConnectMsg disconnect;
+  msgrcv(KEY, &disconnect, sizeof(disconnect), 2, 0);
+
+  for (int i = 0; i < sizeof(CLIENT_LIST)/sizeof(CLIENT_LIST[0]);i++) {
+    if (CLIENT_LIST[i].mtypeClient == disconnect.mtypeClient) {
+      strcmp(CLIENT_LIST[i].name,"0");
+      CLIENT_LIST[i].mtypeClient = 0;
+      break;
+    }
+  }
+  printf("Klient %ld oposcil serwer\n",disconnect.mtypeClient);
+}
+
+// void sendUniqNameReq(long mtypeClient) {
+//   struct Msg message;
+
+//   message.mtype = mtypeClient;
+//   strcpy(message.message,"Poloczono z serwerem\n");
+
+//   msgsnd(KEY, &message, sizeof(message), 0);
+//   printf("Wyslano wiadomosc do klienta o mtype: %ld\n",mtypeClient);
+// }
 
 int checkIfNameUniq(char* name){
   for(int i=0;i<sizeof(CLIENT_LIST)/sizeof(CLIENT_LIST[0]);i++){
@@ -86,6 +115,7 @@ int checkIfClientIsValid(struct Client newClient) {
   int check = 0;
   if (!checkIfNameUniq(newClient.name)) {
     printf("Nazwa %s sie powtarza\n",newClient.name);
+
     check++;
   }
 
@@ -122,7 +152,11 @@ int main() {
   KEY = msgget(123456789,0644|IPC_CREAT);
 
   while(1) {
-    addClient();
+    if (fork() == 0) {
+      disconnectClient();
+    } else {
+      addClient();
+    }
 
     printf("Wpisz 1 \n");
     int x;

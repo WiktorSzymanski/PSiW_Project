@@ -8,6 +8,8 @@
 #include <ctype.h>
 #include <stdlib.h>
 
+int KEY;
+
 struct ConnectMsg {
   long mtype;
   char name[20];
@@ -29,6 +31,8 @@ int length(char* string) {
     return result;
   }
 }
+
+
 
 // int isAlphaOnly(char* string) {
 //   for(int i = 0; i < length(string); i++) {
@@ -58,6 +62,15 @@ void printConnectMsg(struct ConnectMsg toPrint) {
   printf("mtype: %ld\tname: %s\tmtypeClient: %ld\n",toPrint.mtype,toPrint.name,toPrint.mtypeClient);
 }
 
+int disconnectFromServer(long mtypeClient) {
+  struct ConnectMsg dissconect;
+
+  dissconect.mtype = 2;
+  dissconect.mtypeClient = mtypeClient;
+
+  return msgsnd(KEY, &dissconect, sizeof(dissconect), 0);
+}
+
 void getUserName(char* s) {
   char name[20];
   printf("Podaj nazwe uzytkownika \n");
@@ -84,7 +97,7 @@ long userKey() {
   }
 }
 
-long connectToServer(int key) {
+long connectToServer() {
   struct ConnectMsg connect;
 
   char name[20];
@@ -97,20 +110,34 @@ long connectToServer(int key) {
 
   printConnectMsg(connect);
 
-  msgsnd(key, &connect, sizeof(connect),0);
+  msgsnd(KEY, &connect, sizeof(connect),0);
   printf("Wyslano request\n");
 
   return mtypeClient;
 }
 
 int main() {
-  int key = msgget(123456789,0644|IPC_CREAT);
-  long mtypeClient = connectToServer(key);
+  KEY = msgget(123456789,0644|IPC_CREAT);
+  long mtypeClient = connectToServer();
 
   struct Msg message;
 
-  msgrcv(key, &message, sizeof(message), mtypeClient, 0);
+  msgrcv(KEY, &message, sizeof(message), mtypeClient, 0);
   printf("%s", message.message);
+
+  while(1){
+    printf("[0] Wyjdz\nCo chcesz zrobic: ");
+    int operation;
+    scanf("%d",&operation);
+    switch (operation) {
+      case 0:
+        if(disconnectFromServer(mtypeClient) == 0) {
+          printf("Odlaczono od serwera\n");
+        }
+        exit(0);
+        break;
+    }
+  }
 
 
   return 0;

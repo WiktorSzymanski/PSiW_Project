@@ -9,6 +9,7 @@
 #include <wait.h>
 
 int KEY;
+struct Server *SERVER_LIST;
 
 struct Room{
   int id;
@@ -30,13 +31,13 @@ struct ConnectMsg {
 struct Client {
   char name[19];
   long mtypeClient;
-} CLIENT_LIST[5] = {
-  {"0",0},
-  {"0",0},
-  {"0",0},
-  {"0",0},
-  {"0",0}
 };
+
+struct Server {
+  char name[10];
+  int id;
+  struct Client clientList[5];
+} THIS_SERVER;
 
 struct Msg {
   long mtype;
@@ -55,7 +56,7 @@ void printClient(struct Client toPrint) {
 void printClientList() {
   printf("Aktualna lista klientow: \n");
   for(int i = 0; i < 5; i++) {
-    printClient(CLIENT_LIST[i]);
+    printClient(SERVER_LIST[0].clientList[i]);
   }
 }
 
@@ -73,10 +74,10 @@ void disconnectClient() {
   struct ConnectMsg disconnect;
   msgrcv(KEY, &disconnect, sizeof(disconnect), 2, 0);
 
-  for (int i = 0; i < sizeof(CLIENT_LIST)/sizeof(CLIENT_LIST[0]);i++) {
-    if (CLIENT_LIST[i].mtypeClient == disconnect.mtypeClient) {
-      strcmp(CLIENT_LIST[i].name,"0");
-      CLIENT_LIST[i].mtypeClient = 0;
+  for (int i = 0; i < sizeof(SERVER_LIST[0].clientList)/sizeof(SERVER_LIST[0].clientList[0]);i++) {
+    if (SERVER_LIST[0].clientList[i].mtypeClient == disconnect.mtypeClient) {
+      strcpy(SERVER_LIST[0].clientList[i].name,"");
+      SERVER_LIST[0].clientList[i].mtypeClient = 0;
       break;
     }
   }
@@ -94,8 +95,8 @@ void disconnectClient() {
 // }
 
 int checkIfNameUniq(char* name){
-  for(int i=0;i<sizeof(CLIENT_LIST)/sizeof(CLIENT_LIST[0]);i++){
-    if(strcmp(name,CLIENT_LIST[i].name) == 0){
+  for(int i=0;i<sizeof(SERVER_LIST[0].clientList)/sizeof(SERVER_LIST[0].clientList[0]);i++){
+    if(strcmp(name,SERVER_LIST[0].clientList[i].name) == 0){
       return 0;
     }
   }
@@ -103,8 +104,8 @@ int checkIfNameUniq(char* name){
 }
 
 int checkIfmTypeUniq(long mtype) {
-  for(int i=0;i<sizeof(CLIENT_LIST)/sizeof(CLIENT_LIST[0]);i++){
-    if(CLIENT_LIST[i].mtypeClient == mtype){
+  for(int i=0;i<sizeof(SERVER_LIST[0].clientList)/sizeof(SERVER_LIST[0].clientList[0]);i++){
+    if(SERVER_LIST[0].clientList[i].mtypeClient == mtype){
       return 0;
     }
   }
@@ -137,11 +138,11 @@ void addClient() {
 
   checkIfClientIsValid(newClient);
 
-  //printClient(newClient);
+  printClient(newClient);
 
   for(int i = 0; i < 5; i++) {
-    if (strcmp(CLIENT_LIST[i].name,"0") == 0) {
-      CLIENT_LIST[i] = newClient;
+    if (strcmp(SERVER_LIST[0].clientList[i].name,"") == 0) {
+      SERVER_LIST[0].clientList[i] = newClient;
       sendConnectionEstablishedMsg(newClient.mtypeClient);
       break;
     }
@@ -150,6 +151,10 @@ void addClient() {
 
 int main() {
   KEY = msgget(123456789,0644|IPC_CREAT);
+  int shmId = shmget(12345678,8,0644|IPC_CREAT);
+  SERVER_LIST = (struct Server *)shmat(shmId,NULL,0);
+
+  SERVER_LIST[0] = THIS_SERVER;
 
   while(1) {
     if (fork() == 0) {

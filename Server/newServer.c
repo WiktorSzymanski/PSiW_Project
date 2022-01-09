@@ -23,7 +23,18 @@ struct Client {
   {"0",1},
   {"0",1},
   {"0",1},
-  {"0",1},
+  {"0",1}
+};
+
+struct Room{
+  int id;
+  long arrayOfClients[5];
+} ROOM_LIST[5] = {
+  {0,{}},
+  {1,{}},
+  {2,{}},
+  {3,{}},
+  {4,{}}
 };
 
 void printClient(struct Client toPrint) {
@@ -54,11 +65,16 @@ void addClient(int key) {
     }
   }
 }
+// chuj 
 
 int main() {
 
   int key = msgget(123456789,0644|IPC_CREAT);
 
+  for(int i=0;i<sizeof(ROOM_LIST)/sizeof(ROOM_LIST[1]);i++){
+      printf("%d  \n", ROOM_LIST[i].id);
+  }
+  
   while(1) {
     addClient(key);
 
@@ -71,4 +87,13 @@ int main() {
   }
   
   return 0;
+}
+
+int checkName(char* name){
+  for(int i=0;i<sizeof(CLIENT_LIST);i++){
+    if(strcmp(CLIENT_LIST[i].name,name)){
+      return 0;
+    }
+  }
+  return 1;
 }

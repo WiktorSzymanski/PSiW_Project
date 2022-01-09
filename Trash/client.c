@@ -6,8 +6,17 @@
 #include <sys/types.h>
 #include <sys/msg.h>
 
-struct Message {
+struct ConnectMessage {
+  long mtype;
+  char UserName[50];
+  int ConnectionKey;
+} THIS_CONNECT_MESSAGE;
 
+struct Message {
+  long mtype;
+  int userId;
+  char message[1024];
+  // destination
 }
 
 struct Server {
@@ -46,6 +55,8 @@ int main() {
 
   checkIfServerIsOnList(ConnectTo, serverList);
 
+  int key = msgget(99999999,0644|IPC_CREAT);
+  // THIS_CONNECT_MESSAGE.name
   
   return 0;
 }

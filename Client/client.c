@@ -14,16 +14,21 @@ struct ConnectMsg {
   long mtypeClient;
 };
 
-// int length(char* string) {
-//   int result = 0;
-//   while(1) {
-//     if (string[result] != '\0') {
-//       result++;
-//       continue;
-//     }
-//     return result;
-//   }
-// }
+struct Msg {
+  long mtype;
+  char message[1024];
+};
+
+int length(char* string) {
+  int result = 0;
+  while(1) {
+    if (string[result] != '\0') {
+      result++;
+      continue;
+    }
+    return result;
+  }
+}
 
 // int isAlphaOnly(char* string) {
 //   for(int i = 0; i < length(string); i++) {
@@ -57,14 +62,14 @@ void getUserName(char* s) {
   char name[20];
   printf("Podaj nazwe uzytkownika \n");
   scanf("%s", name);
-  if(!nameLengthAndAlphaOnlyCheck(name,19)) {
+  if(length(name) > 20) {
     getUserName(name);
   }
   name[20] = '\0';
   strcpy(s,name);
 }
 
-long userKey(char *string) {
+long userKey() {
   int lower = 10;
   int upper = 300000;
   time_t time;
@@ -79,7 +84,7 @@ long userKey(char *string) {
   }
 }
 
-void connectToServer(int key) {
+long connectToServer(int key) {
   struct ConnectMsg connect;
 
   char name[20];
@@ -87,17 +92,26 @@ void connectToServer(int key) {
 
   connect.mtype = 1;
   strcpy(connect.name,name);
-  connect.mtypeClient = userKey(name);
+  long mtypeClient = userKey();
+  connect.mtypeClient = mtypeClient;
 
   printConnectMsg(connect);
 
   msgsnd(key, &connect, sizeof(connect),0);
   printf("Wyslano request\n");
+
+  return mtypeClient;
 }
 
 int main() {
   int key = msgget(123456789,0644|IPC_CREAT);
-  connectToServer(key);
+  long mtypeClient = connectToServer(key);
+
+  struct Msg message;
+
+  msgrcv(key, &message, sizeof(message), mtypeClient, 0);
+  printf("%s", message.message);
+
 
   return 0;
 }

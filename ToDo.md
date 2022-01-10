@@ -6,8 +6,7 @@ Client
 -   • wyświetlenie listy użytkowników zapisanych do pokoi
 -   • zapisanie się użytkownika do pokoju
 -   • wypisanie się użytkownika z pokoju
--   • wyświetlanie czatu prowadzonego na wskazanym kanale (każda wiadomość to czas wysłania,
--     nazwa użytkownika i treść) — wyświetlane jest ostatnich 10 wiadomości,
+-   • wyświetlanie czatu prowadzonego na wskazanym kanale (każda wiadomość to czas wysłania,nazwa użytkownika i treść) — wyświetlane jest ostatnich 10 wiadomości,
 -   • możliwość wysłania wiadomości na wskazany kanał
 -   • możliwość odebrania wiadomości z kanału
 -   • możliwość odebrania wiadomości prywatnej (wyraźnie rozróżnionej),

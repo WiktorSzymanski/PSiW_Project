@@ -32,32 +32,6 @@ int length(char* string) {
   }
 }
 
-
-
-// int isAlphaOnly(char* string) {
-//   for(int i = 0; i < length(string); i++) {
-//     if(!isalpha(string[i])) {
-//       return 0;
-//     }
-//   }
-//   return 1;
-// }
-
-// int nameLengthAndAlphaOnlyCheck(char* string, int maxNumOfChar) {
-//   int check = 0;
-//   if(length(string) > maxNumOfChar) {
-//     printf("Max 19 znakow!\n");
-//     check++;
-//   }
-
-//   if(!isAlphaOnly(string)) {
-//     printf("Tylko znaki alfabetu lacinskiego!\n");
-//     check++;
-//   }
-
-//   return check == 0;
-// }
-
 void printConnectMsg(struct ConnectMsg toPrint) {
   printf("mtype: %ld\tname: %s\tclientKey: %d\n",toPrint.mtype,toPrint.name,toPrint.clientKeyId);
 }
@@ -83,7 +57,7 @@ void getUserName(char* s) {
   strcpy(s,name);
 }
 
-int userKey() {
+int getUserKey() {
   int lower = 10;
   int upper = 300000;
   time_t time;
@@ -106,7 +80,7 @@ int connectToServer() {
 
   connect.mtype = 1;
   strcpy(connect.name,name);
-  int clientKey = userKey();
+  int clientKey = getUserKey();
 
   int clientKeyId = msgget(clientKey, 0644|IPC_CREAT);
 
@@ -120,13 +94,12 @@ int connectToServer() {
   return clientKeyId;
 }
 
-int main() {
+void loggedInMenu() {
   KEY = msgget(1234567890,0644|IPC_CREAT);
   int clientKeyId = connectToServer();
 
   struct Msg message;
 
-  printf("Bruh\n");
   while(1) {
     if (msgrcv(clientKeyId, &message, sizeof(message), 1, IPC_NOWAIT) != -1) {
       break;
@@ -146,10 +119,17 @@ int main() {
   printf("%s", message.message);
 
   while(1){
-    printf("[0] Wyjdz\nCo chcesz zrobic: ");
+    printf("[9] Wyloguj sie\n[0] Wyjdz\nCo chcesz zrobic: ");
     int operation;
     scanf("%d",&operation);
     switch (operation) {
+      case 9:
+        if(disconnectFromServer(clientKeyId) == 0) {
+          sleep(1);
+          printf("Odlaczono od serwera clientKeyId: %d\n",clientKeyId);
+          // msgctl(clientKeyId, IPC_RMID,&message);
+        }
+        return;
       case 0:
         if(disconnectFromServer(clientKeyId) == 0) {
           sleep(1);
@@ -160,7 +140,22 @@ int main() {
         break;
     }
   }
+}
 
-
+int main() {
+  while(1){
+    printf("[1] Zaloguj sie\n[0] Wyjdz\nCo chcesz zrobic: ");
+    int operation;
+    scanf("%d",&operation);
+    switch (operation) {
+      case 1:
+        loggedInMenu();
+        break;
+      case 0:
+        printf("Wychodznie z programu\n");
+        exit(0);
+        break;
+    }
+  }
   return 0;
 }

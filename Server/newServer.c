@@ -116,9 +116,9 @@ int checkIfClientIsValid(struct Client newClient) {
   if (!checkIfNameUniq(newClient.name)) {
     printf("Nazwa %s sie powtarza\n",newClient.name);
     sendUniqNameReq(newClient.clientKeyId);
-    printf("Wpisz 1 \n");
-    int x;
-    scanf("%d",&x);
+    // printf("Wpisz 1 \n");
+    // int x;
+    // scanf("%d",&x);
 
     check++;
   }
@@ -126,9 +126,9 @@ int checkIfClientIsValid(struct Client newClient) {
   if (!checkIfKeyIdUniq(newClient.clientKeyId)) {
     printf("mType %d sie powtarza\n",newClient.clientKeyId);
 
-    printf("Wpisz 1 \n");
-    int x;
-    scanf("%d",&x);
+    // printf("Wpisz 1 \n");
+    // int x;
+    // scanf("%d",&x);
 
     check++;
   }

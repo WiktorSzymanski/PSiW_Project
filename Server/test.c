@@ -1,36 +1,28 @@
 #include <stdio.h>
+#include <sys/ipc.h>
+#include <sys/shm.h>
+#include <unistd.h>
 #include <string.h>
+#include <sys/types.h>
+#include <sys/msg.h>
+#include <ctype.h>
+#include <wait.h>
 
-struct Man {
-  char name[10];
-  int age;
-};
-
-struct Group {
-  char name[10];
-  struct Man listOfPpl[5];
-} NEW_GROUP;
+struct ConnectMsg {
+  long mtype;
+  char name[20];
+  int clientKeyId;
+} connect;
 
 void main() {
-  strcpy(NEW_GROUP.name,"Klasa 4D");
-  struct Man pp1, pp2, pp3;
-
-  strcpy(pp1.name,"Jan");
-  pp1.age = 5;
-  strcpy(pp2.name,"Janek");
-  pp2.age = 15;
-  strcpy(pp3.name,"Janula");
-  pp3.age = 163;
-
-  NEW_GROUP.listOfPpl[0] = pp1;
-  NEW_GROUP.listOfPpl[1] = pp2;
-  NEW_GROUP.listOfPpl[2] = pp3;
-
-  void printMan(struct Man men) {
-    printf("Name: %s\tAge: %d\n",men.name,men.age);
-  }
-
-  for (int i = 0; i < 5; i++) {
-    printMan(NEW_GROUP.listOfPpl[i]);
+  int key = msgget(123456789,0644|IPC_CREAT);
+  while (1) {
+    int catchData = msgrcv(key, &connect, sizeof(connect), 1, IPC_NOWAIT);
+    if (catchData != -1) {
+      printf("mtype: %ld\tname: %s\tkeyId: %d\n",connect.mtype, connect.name, connect.clientKeyId);
+    } else {
+      printf("NOPE\n");
+    }
+    sleep(1);
   }
 }

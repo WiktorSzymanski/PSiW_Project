@@ -162,7 +162,7 @@ void addClient() {
 }
 
 int main() {
-  KEY = msgget(1234567890,0644|IPC_CREAT);
+  KEY = msgget(123456789,0644|IPC_CREAT);
   int shmId = shmget(12345678,8,0644|IPC_CREAT);
   SERVER_LIST = (struct Server *)shmat(shmId,NULL,0);
 

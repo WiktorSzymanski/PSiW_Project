@@ -7,6 +7,7 @@
 #include <sys/msg.h>
 #include <ctype.h>
 #include <wait.h>
+#include <stdlib.h>
 
 int KEY;
 struct Server *SERVER_LIST;
@@ -42,6 +43,7 @@ struct Server {
 struct Msg {
   long mtype;
   char message[1024];
+  int clientKeyId;
 };
 
 void printClient(struct Client toPrint) {
@@ -76,7 +78,7 @@ void disconnectClient() {
         break;
       }
     }
-    // msgctl(disconnect.clientKeyId, IPC_RMID,&disconnect);
+    msgctl(disconnect.clientKeyId, IPC_RMID,&disconnect);
     printf("Klient %d oposcil serwer\n",disconnect.clientKeyId);
   } else {
     printf("Brak request-u disconnectClient\n");
@@ -161,6 +163,25 @@ void addClient() {
   }
 }
 
+void sendClientList(){
+  struct Msg clientListMsg;
+  if (msgrcv(KEY, &clientListMsg, sizeof(clientListMsg), 3, IPC_NOWAIT) != -1) {
+    strcpy(clientListMsg.message, "");
+    char number[1];
+    for (int i = 0; i < sizeof(SERVER_LIST[0].clientList)/sizeof(SERVER_LIST[0].clientList[0]);i++) {
+      number[0] = i+1+'0';
+      strcat(clientListMsg.message,number);
+      strcat(clientListMsg.message,".\t");
+      strcat(clientListMsg.message,SERVER_LIST[0].clientList[i].name);
+      strcat(clientListMsg.message,"\n");
+    }
+    clientListMsg.mtype=3;
+    msgsnd(clientListMsg.clientKeyId, &clientListMsg, sizeof(clientListMsg), 0);
+  } else {
+    printf("Brak request-u ClientsList\n");
+  }
+}
+
 int main() {
   KEY = msgget(1234567890,0644|IPC_CREAT);
   int shmId = shmget(12345678,8,0644|IPC_CREAT);
@@ -172,6 +193,7 @@ int main() {
 
     disconnectClient();
     addClient();
+    sendClientList();
 
 
     // printf("Wpisz 1 \n");

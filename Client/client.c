@@ -9,6 +9,7 @@
 #include <stdlib.h>
 
 int KEY;
+int CLIENT_KEY_ID;
 
 struct ConnectMsg {
   long mtype;
@@ -19,6 +20,7 @@ struct ConnectMsg {
 struct Msg {
   long mtype;
   char message[1024];
+  int clientKeyId;
 };
 
 int length(char* string) {
@@ -36,12 +38,12 @@ void printConnectMsg(struct ConnectMsg toPrint) {
   printf("mtype: %ld\tname: %s\tclientKey: %d\n",toPrint.mtype,toPrint.name,toPrint.clientKeyId);
 }
 
-int disconnectFromServer(int clientKey) {
+int disconnectFromServer() {
   struct ConnectMsg dissconect;
 
 
   dissconect.mtype = 2;
-  dissconect.clientKeyId = clientKey;
+  dissconect.clientKeyId = CLIENT_KEY_ID;
 
   return msgsnd(KEY, &dissconect, sizeof(dissconect), 0);
 }
@@ -72,6 +74,16 @@ int getUserKey() {
   }
 }
 
+void getClientList(){
+  struct Msg listRequest;
+  listRequest.mtype = 3;
+  listRequest.clientKeyId = CLIENT_KEY_ID;
+  strcpy(listRequest.message, "Daj prosze liste uzytkownikow");
+  msgsnd(KEY,&listRequest, sizeof(listRequest),0);
+  msgrcv(CLIENT_KEY_ID, &listRequest, sizeof(listRequest), 3, 0);
+  printf("%s",listRequest.message);
+}
+
 int connectToServer() {
   struct ConnectMsg connect;
 
@@ -96,22 +108,22 @@ int connectToServer() {
 
 void loggedInMenu() {
   KEY = msgget(1234567890,0644|IPC_CREAT);
-  int clientKeyId = connectToServer();
+  CLIENT_KEY_ID = connectToServer();
 
   struct Msg message;
 
   while(1) {
-    if (msgrcv(clientKeyId, &message, sizeof(message), 1, IPC_NOWAIT) != -1) {
+    if (msgrcv(CLIENT_KEY_ID, &message, sizeof(message), 1, IPC_NOWAIT) != -1) {
       break;
     }
-    if (msgrcv(clientKeyId, &message, sizeof(message), 2, IPC_NOWAIT) != -1) {
+    if (msgrcv(CLIENT_KEY_ID, &message, sizeof(message), 2, IPC_NOWAIT) != -1) {
       struct ConnectMsg connect;
       printf("Podana nazwa się powtarza!\n");
       char name[20];
       getUserName(name);
       connect.mtype = 1;
       strcpy(connect.name,name);
-      connect.clientKeyId = clientKeyId;
+      connect.clientKeyId = CLIENT_KEY_ID;
       msgsnd(KEY, &connect, sizeof(connect),0);
     }
   }
@@ -119,24 +131,28 @@ void loggedInMenu() {
   printf("%s", message.message);
 
   while(1){
-    printf("[9] Wyloguj sie\n[0] Wyjdz\nCo chcesz zrobic: ");
+    printf("[2] Wyswietl liste uzytkownikow\n[9] Wyloguj sie\n[0] Wyjdz\nCo chcesz zrobic: ");
     int operation;
     scanf("%d",&operation);
     switch (operation) {
       case 9:
-        if(disconnectFromServer(clientKeyId) == 0) {
+        if(disconnectFromServer() == 0) {
           sleep(1);
-          printf("Odlaczono od serwera clientKeyId: %d\n",clientKeyId);
-          // msgctl(clientKeyId, IPC_RMID,&message);
+          printf("Odlaczono od serwera clientKeyId: %d\n",CLIENT_KEY_ID);
+          msgctl(CLIENT_KEY_ID, IPC_RMID,&message);
         }
         return;
       case 0:
-        if(disconnectFromServer(clientKeyId) == 0) {
+        if(disconnectFromServer() == 0) {
           sleep(1);
-          printf("Odlaczono od serwera clientKeyId: %d\n",clientKeyId);
-          // msgctl(clientKeyId, IPC_RMID,&message);
+          printf("Odlaczono od serwera clientKeyId: %d\n",CLIENT_KEY_ID);
+          msgctl(CLIENT_KEY_ID, IPC_RMID,&message);
         }
         exit(0);
+        break;
+      case 2:
+        printf("Lista uzytkownikow: \n");
+        getClientList();
         break;
     }
   }
@@ -144,7 +160,7 @@ void loggedInMenu() {
 
 int main() {
   while(1){
-    printf("[1] Zaloguj sie\n[0] Wyjdz\nCo chcesz zrobic: ");
+    printf("[0] Wyjdz\n[1] Zaloguj sie\nCo chcesz zrobic: ");
     int operation;
     scanf("%d",&operation);
     switch (operation) {

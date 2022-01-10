@@ -11,7 +11,7 @@ Client
 -   • możliwość odebrania wiadomości z kanału
 -   • możliwość odebrania wiadomości prywatnej (wyraźnie rozróżnionej),
 -   • możliwość wysłania wiadomości prywatnej do dowolnego użytkownika (w ramach pokoi do których należy wysyłający użytkownik)
--   • możliwość wylogowania z systemu
++   • możliwość wylogowania z systemu
 -   • odpowiadanie na komunikaty heartbeat serwera.
 
 Serwer
@@ -23,5 +23,4 @@ Serwer
 -   • odbiór i przesłanie wiadomości prywatnych do wskazanego użytkownika na tym serwerze
 -   • weryfikacja obecności klientów (mechanizm heartbeat)
 -   • odbiór wiadomości i wysyłanie ich do wszystkich innych serwerów o ile są na nich odpowiednie kanały
--   • przesłanie informacji o zakończeniu pracy do pozostałych serwerów (skutkuje to usunięciem
--   informacji o serwerze na pozostałych serwerach-
+-   • przesłanie informacji o zakończeniu pracy do pozostałych serwerów (skutkuje to usunięciem informacji o serwerze na pozostałych serwerach-

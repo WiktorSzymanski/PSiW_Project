@@ -25,12 +25,12 @@ struct Room{
 struct ConnectMsg {
   long mtype;
   char name[19];
-  long mtypeClient;
+  int clientKeyId;
 };
 
 struct Client {
   char name[19];
-  long mtypeClient;
+  int clientKeyId;
 };
 
 struct Server {
@@ -50,7 +50,7 @@ struct Msg {
 // }
 
 void printClient(struct Client toPrint) {
-  printf("%s\t%ld\n",toPrint.name,toPrint.mtypeClient);
+  printf("%s\t%d\n",toPrint.name,toPrint.clientKeyId);
 }
 
 void printClientList() {
@@ -60,14 +60,14 @@ void printClientList() {
   }
 }
 
-void sendConnectionEstablishedMsg(long mtypeClient) {
+void sendConnectionEstablishedMsg(int clientKeyId) {
   struct Msg message;
 
-  message.mtype = mtypeClient;
+  message.mtype = 1;
   strcpy(message.message,"Poloczono z serwerem\n");
 
-  msgsnd(KEY, &message, sizeof(message), 0);
-  printf("Wyslano wiadomosc do klienta o mtype: %ld\n",mtypeClient);
+  msgsnd(clientKeyId, &message, sizeof(message), 0);
+  printf("Wyslano wiadomosc do klienta o mtype: %d\n",clientKeyId);
 }
 
 void disconnectClient() {
@@ -75,23 +75,23 @@ void disconnectClient() {
   msgrcv(KEY, &disconnect, sizeof(disconnect), 2, 0);
 
   for (int i = 0; i < sizeof(SERVER_LIST[0].clientList)/sizeof(SERVER_LIST[0].clientList[0]);i++) {
-    if (SERVER_LIST[0].clientList[i].mtypeClient == disconnect.mtypeClient) {
+    if (SERVER_LIST[0].clientList[i].clientKeyId == disconnect.clientKeyId) {
       strcpy(SERVER_LIST[0].clientList[i].name,"");
-      SERVER_LIST[0].clientList[i].mtypeClient = 0;
+      SERVER_LIST[0].clientList[i].clientKeyId = 0;
       break;
     }
   }
-  printf("Klient %ld oposcil serwer\n",disconnect.mtypeClient);
+  printf("Klient %d oposcil serwer\n",disconnect.clientKeyId);
 }
 
-// void sendUniqNameReq(long mtypeClient) {
+// void sendUniqNameReq(long clientKeyId) {
 //   struct Msg message;
 
-//   message.mtype = mtypeClient;
+//   message.mtype = clientKeyId;
 //   strcpy(message.message,"Poloczono z serwerem\n");
 
 //   msgsnd(KEY, &message, sizeof(message), 0);
-//   printf("Wyslano wiadomosc do klienta o mtype: %ld\n",mtypeClient);
+//   printf("Wyslano wiadomosc do klienta o mtype: %d\n",clientKeyId);
 // }
 
 int checkIfNameUniq(char* name){
@@ -105,7 +105,7 @@ int checkIfNameUniq(char* name){
 
 int checkIfmTypeUniq(long mtype) {
   for(int i=0;i<sizeof(SERVER_LIST[0].clientList)/sizeof(SERVER_LIST[0].clientList[0]);i++){
-    if(SERVER_LIST[0].clientList[i].mtypeClient == mtype){
+    if(SERVER_LIST[0].clientList[i].clientKeyId == mtype){
       return 0;
     }
   }
@@ -120,8 +120,8 @@ int checkIfClientIsValid(struct Client newClient) {
     check++;
   }
 
-  if (!checkIfmTypeUniq(newClient.mtypeClient)) {
-    printf("mType %ld sie powtarza\n",newClient.mtypeClient);
+  if (!checkIfmTypeUniq(newClient.clientKeyId)) {
+    printf("mType %d sie powtarza\n",newClient.clientKeyId);
     check++;
   }
 
@@ -134,7 +134,7 @@ void addClient() {
 
   struct Client newClient;
   strcpy(newClient.name,connect.name);
-  newClient.mtypeClient = connect.mtypeClient;
+  newClient.clientKeyId = connect.clientKeyId;
 
   checkIfClientIsValid(newClient);
 
@@ -143,7 +143,7 @@ void addClient() {
   for(int i = 0; i < 5; i++) {
     if (strcmp(SERVER_LIST[0].clientList[i].name,"") == 0) {
       SERVER_LIST[0].clientList[i] = newClient;
-      sendConnectionEstablishedMsg(newClient.mtypeClient);
+      sendConnectionEstablishedMsg(newClient.clientKeyId);
       break;
     }
   }

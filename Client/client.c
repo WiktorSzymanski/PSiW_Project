@@ -13,7 +13,7 @@ int KEY;
 struct ConnectMsg {
   long mtype;
   char name[20];
-  long mtypeClient;
+  int clientKeyId;
 };
 
 struct Msg {
@@ -59,14 +59,15 @@ int length(char* string) {
 // }
 
 void printConnectMsg(struct ConnectMsg toPrint) {
-  printf("mtype: %ld\tname: %s\tmtypeClient: %ld\n",toPrint.mtype,toPrint.name,toPrint.mtypeClient);
+  printf("mtype: %ld\tname: %s\tclientKey: %d\n",toPrint.mtype,toPrint.name,toPrint.clientKeyId);
 }
 
-int disconnectFromServer(long mtypeClient) {
+int disconnectFromServer(int clientKey) {
   struct ConnectMsg dissconect;
 
+
   dissconect.mtype = 2;
-  dissconect.mtypeClient = mtypeClient;
+  dissconect.clientKeyId = clientKey;
 
   return msgsnd(KEY, &dissconect, sizeof(dissconect), 0);
 }
@@ -82,11 +83,11 @@ void getUserName(char* s) {
   strcpy(s,name);
 }
 
-long userKey() {
+int userKey() {
   int lower = 10;
   int upper = 300000;
   time_t time;
-  long key = 0;
+  int key = 0;
 
   key = (((random() % (upper - lower + 1)) + lower) * time);
 
@@ -97,7 +98,7 @@ long userKey() {
   }
 }
 
-long connectToServer() {
+int connectToServer() {
   struct ConnectMsg connect;
 
   char name[20];
@@ -105,24 +106,27 @@ long connectToServer() {
 
   connect.mtype = 1;
   strcpy(connect.name,name);
-  long mtypeClient = userKey();
-  connect.mtypeClient = mtypeClient;
+  int clientKey = userKey();
+
+  int clientKeyId = msgget(clientKey, 0644|IPC_CREAT);
+
+  connect.clientKeyId = clientKeyId;
 
   printConnectMsg(connect);
 
   msgsnd(KEY, &connect, sizeof(connect),0);
   printf("Wyslano request\n");
 
-  return mtypeClient;
+  return clientKeyId;
 }
 
 int main() {
   KEY = msgget(123456789,0644|IPC_CREAT);
-  long mtypeClient = connectToServer();
+  int clientKeyId = connectToServer();
 
   struct Msg message;
 
-  msgrcv(KEY, &message, sizeof(message), mtypeClient, 0);
+  msgrcv(clientKeyId, &message, sizeof(message), 1, 0);
   printf("%s", message.message);
 
   while(1){
@@ -131,7 +135,7 @@ int main() {
     scanf("%d",&operation);
     switch (operation) {
       case 0:
-        if(disconnectFromServer(mtypeClient) == 0) {
+        if(disconnectFromServer(clientKeyId) == 0) {
           printf("Odlaczono od serwera\n");
         }
         exit(0);

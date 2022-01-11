@@ -117,6 +117,7 @@ int connectToServer() {
   return clientKeyId;
 }
 
+
 void loggedInMenu() {
   KEY = msgget(1234567890,0644|IPC_CREAT);
   CLIENT_KEY_ID = connectToServer();

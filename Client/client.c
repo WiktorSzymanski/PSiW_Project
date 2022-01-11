@@ -84,6 +84,17 @@ void getClientList(){
   printf("%s",listRequest.message);
 }
 
+void getChannelList(){
+  struct Msg listRequest;
+  listRequest.mtype = 4;
+  listRequest.clientKeyId = CLIENT_KEY_ID;
+  strcpy(listRequest.message, "Daj prosze liste kanalow");
+  msgsnd(KEY,&listRequest, sizeof(listRequest),0);
+  msgrcv(CLIENT_KEY_ID, &listRequest, sizeof(listRequest), 4, 0);
+  printf("%s",listRequest.message);
+}
+
+
 int connectToServer() {
   struct ConnectMsg connect;
 
@@ -131,10 +142,15 @@ void loggedInMenu() {
   printf("%s", message.message);
 
   while(1){
-    printf("[2] Wyswietl liste uzytkownikow\n[9] Wyloguj sie\n[0] Wyjdz\nCo chcesz zrobic: ");
+    printf("[1] Wyswietl liste kanalow\n[2] Wyswietl liste uzytkownikow\n[9] Wyloguj sie\n[0] Wyjdz\nCo chcesz zrobic: ");
     int operation;
     scanf("%d",&operation);
     switch (operation) {
+      case 1:
+        printf("Lista kanalow: \n");
+        getChannelList();
+        break;
+      break;
       case 9:
         if(disconnectFromServer() == 0) {
           sleep(1);

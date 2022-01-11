@@ -9,18 +9,14 @@
 #include <wait.h>
 #include <stdlib.h>
 
+#define CHANNELS 5
+
 int KEY;
 struct Server *SERVER_LIST;
 
 struct Room{
   int id;
   long arrayOfClients[5];
-} ROOM_LIST[5] = {
-  {0,{}},
-  {1,{}},
-  {2,{}},
-  {3,{}},
-  {4,{}}
 };
 
 struct ConnectMsg {
@@ -38,6 +34,7 @@ struct Server {
   char name[10];
   int id;
   struct Client clientList[5];
+  struct Room roomList[5];
 } THIS_SERVER;
 
 struct Msg {
@@ -182,19 +179,50 @@ void sendClientList(){
   }
 }
 
+void sendChannelList(){
+  struct Msg channelListMsg;
+  if (msgrcv(KEY, &channelListMsg, sizeof(channelListMsg), 4, IPC_NOWAIT) != -1) {
+    strcpy(channelListMsg.message, "");
+    char number[1];
+    char mTypeInRoom[10];
+    for (int i = 0; i < CHANNELS;i++) {
+      number[0] = SERVER_LIST[0].roomList[i].id+'0';
+      strcat(channelListMsg.message,number);
+      strcat(channelListMsg.message,".\t");
+      for(int j = 0; j< sizeof(SERVER_LIST[0].roomList[i].arrayOfClients)/sizeof(SERVER_LIST[0].roomList[i].arrayOfClients[i]);j++){
+        mTypeInRoom[0]=SERVER_LIST[0].roomList[i].arrayOfClients[j]+'0';
+        strcat(channelListMsg.message,mTypeInRoom);
+      }
+      
+      strcat(channelListMsg.message,"\n");
+    }
+    channelListMsg.mtype=4;
+    msgsnd(channelListMsg.clientKeyId, &channelListMsg, sizeof(channelListMsg), 0);
+  } else {
+    printf("Brak request-u ChannelList\n");
+  }
+}
+
+
 int main() {
   KEY = msgget(1234567890,0644|IPC_CREAT);
   int shmId = shmget(12345678,8,0644|IPC_CREAT);
   SERVER_LIST = (struct Server *)shmat(shmId,NULL,0);
 
   SERVER_LIST[0] = THIS_SERVER;
+  
+  
+  for(int i=0;i<CHANNELS;i++){
+    SERVER_LIST[0].roomList[i].id=i;
+    memset(SERVER_LIST[0].roomList[i].arrayOfClients,0, sizeof(SERVER_LIST[0].roomList[i].arrayOfClients));
+  }
 
   while(1) {
 
     disconnectClient();
     addClient();
     sendClientList();
-
+    sendChannelList();
 
     // printf("Wpisz 1 \n");
     // int x;

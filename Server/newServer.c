@@ -20,9 +20,15 @@ struct JoinRoomMsg {
   int roomId;
 };
 
+struct ListMsg {
+  long mtype;
+  int clientKeyId;
+  char lista
+};
+
 struct Room{
   int id;
-  long arrayOfClients[5];
+  int arrayOfClients[5];
 };
 
 struct ConnectMsg {
@@ -125,6 +131,7 @@ void addClientToRoom() {
           if(SERVER_LIST[0].roomList[i].arrayOfClients[j] == 0) {
             SERVER_LIST[0].roomList[i].arrayOfClients[j] = join.clientKeyId;
             msgsnd(join.clientKeyId, &join, sizeof(join), 0);
+            break;
           }
         }
       }
@@ -227,6 +234,20 @@ void sendChannelList(){
   }
 }
 
+void printRoomsList() {
+  for(int i = 0; i < sizeof(SERVER_LIST[0].roomList)/sizeof(SERVER_LIST[0].roomList[0]); i++) {
+    printRoom(SERVER_LIST[0].roomList[i]);
+    printf("\n");
+  }
+}
+
+void printRoom(struct Room toPrint) {
+  printf("Room Id: %d\n", toPrint.id);
+
+  for (int i = 0; i < sizeof(toPrint.arrayOfClients)/sizeof(toPrint.arrayOfClients[0]); i++) {
+    printf("Nr. %d\tKlient %d\n",i, toPrint.arrayOfClients[i]);
+  }
+}
 
 int main() {
   KEY = msgget(1234567890,0644|IPC_CREAT);
@@ -237,8 +258,12 @@ int main() {
   
   
   for(int i=0;i<CHANNELS;i++){
-    SERVER_LIST[0].roomList[i].id=i;
-    memset(SERVER_LIST[0].roomList[i].arrayOfClients,0, sizeof(SERVER_LIST[0].roomList[i].arrayOfClients));
+    struct Room newRoom;
+    newRoom.id = i;
+    for(int j = 0 ; j < sizeof(newRoom.arrayOfClients)/sizeof(newRoom.arrayOfClients[0]); j++) {
+      newRoom.arrayOfClients[j] = 0;
+    }
+    SERVER_LIST[0].roomList[i] = newRoom;
   }
 
   while(1) {
@@ -248,6 +273,7 @@ int main() {
     sendClientList();
     sendChannelList();
     addClientToRoom();
+    
 
     // printf("Wpisz 1 \n");
     // int x;
@@ -258,6 +284,7 @@ int main() {
     } else {
       wait(NULL);
       printClientList();
+      printRoomsList();
     }
   }
   

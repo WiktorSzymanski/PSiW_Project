@@ -11,6 +11,12 @@
 int KEY;
 int CLIENT_KEY_ID;
 
+struct JoinRoomMsg {
+  long mtype;
+  int clientKeyId;
+  int roomId;
+};
+
 struct ConnectMsg {
   long mtype;
   char name[20];
@@ -117,6 +123,24 @@ int connectToServer() {
   return clientKeyId;
 }
 
+void joinRoom() {
+  struct JoinRoomMsg join;
+  join.mtype = 5;
+  join.clientKeyId = CLIENT_KEY_ID;
+
+  int roomId;
+  printf("Podaj id pokoju do ktorego chcesz dolaczyc: ");
+  scanf("%d",&roomId);
+  printf("\n");
+
+  join.roomId = roomId;
+
+  msgsnd(KEY, &join, sizeof(join), 0);
+  if (msgrcv(CLIENT_KEY_ID, &join, sizeof(join), 5, 0) != -1) {
+    printf("Dolaczono do pokoju o id %d\n",roomId);
+  }
+  
+}
 
 void loggedInMenu() {
   KEY = msgget(1234567890,0644|IPC_CREAT);
@@ -143,7 +167,7 @@ void loggedInMenu() {
   printf("%s", message.message);
 
   while(1){
-    printf("[1] Wyswietl liste kanalow\n[2] Wyswietl liste uzytkownikow\n[9] Wyloguj sie\n[0] Wyjdz\nCo chcesz zrobic: ");
+    printf("[1] Wyswietl liste kanalow\n[2] Wyswietl liste uzytkownikow\n[3] Dolacz do pokoju\n[9] Wyloguj sie\n[0] Wyjdz\nCo chcesz zrobic: ");
     int operation;
     scanf("%d",&operation);
     switch (operation) {
@@ -170,6 +194,9 @@ void loggedInMenu() {
       case 2:
         printf("Lista uzytkownikow: \n");
         getClientList();
+        break;
+      case 3:
+        joinRoom();
         break;
     }
   }

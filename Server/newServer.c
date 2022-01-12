@@ -14,6 +14,12 @@
 int KEY;
 struct Server *SERVER_LIST;
 
+struct JoinRoomMsg {
+  long mtype;
+  int clientKeyId;
+  int roomId;
+};
+
 struct Room{
   int id;
   long arrayOfClients[5];
@@ -108,6 +114,24 @@ int checkIfKeyIdUniq(int mtype) {
     }
   }
   return 1;
+}
+
+void addClientToRoom() {
+  struct JoinRoomMsg join;
+  if (msgrcv(KEY, &join, sizeof(join), 5, IPC_NOWAIT) != -1) {
+    for(int i = 0; i < sizeof(SERVER_LIST[0].roomList)/sizeof(SERVER_LIST[0].roomList[0]); i++) {
+      if (SERVER_LIST[0].roomList[i].id == join.roomId) {
+        for(int j = 0; j < sizeof(SERVER_LIST[0].roomList[i].arrayOfClients)/sizeof(SERVER_LIST[0].roomList[i].arrayOfClients[0]); j++) {
+          if(SERVER_LIST[0].roomList[i].arrayOfClients[j] == 0) {
+            SERVER_LIST[0].roomList[i].arrayOfClients[j] = join.clientKeyId;
+            msgsnd(join.clientKeyId, &join, sizeof(join), 0);
+          }
+        }
+      }
+    }
+  } else {
+    printf("Brak request-u addClientToRoom\n");
+  }
 }
 
 int checkIfClientIsValid(struct Client newClient) {
@@ -223,6 +247,7 @@ int main() {
     addClient();
     sendClientList();
     sendChannelList();
+    addClientToRoom();
 
     // printf("Wpisz 1 \n");
     // int x;

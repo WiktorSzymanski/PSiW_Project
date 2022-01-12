@@ -2,9 +2,9 @@ Client
 +   • przyjęcie nazwy użytkownika (nazwy muszą być unikalne),
 +   • zarejestrowanie użytkownika w zadanym serwerze, 
 +   • wyświetlanie listy użytkowników zalogowanych na serwerze, 
--   • wyświetlenie listy zarejestrowanych kanałów (pokoi)
--   • wyświetlenie listy użytkowników zapisanych do pokoi
--   • zapisanie się użytkownika do pokoju
++   • wyświetlenie listy zarejestrowanych kanałów (pokoi)
++/-   • wyświetlenie listy użytkowników zapisanych do pokoi
++   • zapisanie się użytkownika do pokoju
 -   • wypisanie się użytkownika z pokoju
 -   • wyświetlanie czatu prowadzonego na wskazanym kanale (każda wiadomość to czas wysłania,nazwa użytkownika i treść) 10wiad
 -   • możliwość wysłania wiadomości na wskazany kanał
@@ -16,9 +16,9 @@ Client
 
 Serwer
 +   • rejestrowanie i wyrejestrowanie użytkowników
-+/- • przesłanie na żądanie klienta listy użytkowników / kanałów / użytkowników korzystających z kanału
++ • przesłanie na żądanie klienta listy użytkowników / kanałów / użytkowników korzystających z kanału
 -   • rejestrowanie nowego kanału
--   • zapisanie/wypisanie użytkownika do/z kanału
++   • zapisanie/wypisanie użytkownika do/z kanału
 -   • odbiór i przesłanie odebranych wiadomości do wszystkich swoich użytkowników korzystających z danego kanału
 -   • odbiór i przesłanie wiadomości prywatnych do wskazanego użytkownika na tym serwerze
 -   • weryfikacja obecności klientów (mechanizm heartbeat)

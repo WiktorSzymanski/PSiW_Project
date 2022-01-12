@@ -8,8 +8,10 @@ Client mtype:
     2 - informacja serwera o zajętej nazwie urzytkownika
     3 - lista urzytkownikow
     4 - lista pokoi
+    5 - dołączanie do pokoi
 Server mtype:
     1 - łączenie się klienta
     2 - rozłączanie klienta
     3 - lista urzytkownikow
     4 - lista pokoi
+    5 - dołączanie do pokoi

@@ -11,6 +11,19 @@
 int KEY;
 int CLIENT_KEY_ID;
 
+struct Room{
+  int id;
+  int numOfClients;
+  int clientListId[5];
+  char clientListNames[5][20];
+};
+
+struct RoomListMsg {
+  long mtype;
+  int clientKeyId;
+  struct Room roomList[5]; 
+};
+
 struct JoinRoomMsg {
   long mtype;
   int clientKeyId;
@@ -90,16 +103,26 @@ void getClientList(){
   printf("%s",listRequest.message);
 }
 
-void getChannelList(){
-  struct Msg listRequest;
-  listRequest.mtype = 4;
-  listRequest.clientKeyId = CLIENT_KEY_ID;
-  strcpy(listRequest.message, "Daj prosze liste kanalow");
-  msgsnd(KEY,&listRequest, sizeof(listRequest),0);
-  msgrcv(CLIENT_KEY_ID, &listRequest, sizeof(listRequest), 4, 0);
-  printf("%s",listRequest.message);
+void printRoom(struct Room toPrint) {
+  printf("Room Id: %d\n", toPrint.id);
+
+  for (int i = 0; i < sizeof(toPrint.clientListId)/sizeof(toPrint.clientListId[0]); i++) {
+    printf("Nr. %d\tKlient %d\n",i, toPrint.clientListId[i]);
+  }
 }
 
+void getChannelList(){
+  struct RoomListMsg listRequest;
+  listRequest.mtype = 4;
+  listRequest.clientKeyId = CLIENT_KEY_ID;
+  msgsnd(KEY,&listRequest, sizeof(listRequest),0);
+  msgrcv(CLIENT_KEY_ID, &listRequest, sizeof(listRequest), 4, 0);
+
+  for(int i = 0; i < sizeof(listRequest.roomList)/sizeof(listRequest.roomList[0]); i++) {
+    printRoom(listRequest.roomList[i]);
+    printf("\n");
+  }
+}
 
 int connectToServer() {
   struct ConnectMsg connect;
@@ -136,9 +159,13 @@ void joinRoom() {
   join.roomId = roomId;
 
   msgsnd(KEY, &join, sizeof(join), 0);
-  if (msgrcv(CLIENT_KEY_ID, &join, sizeof(join), 5, 0) != -1) {
+  msgrcv(CLIENT_KEY_ID, &join, sizeof(join), 5, 0);
+  if (join.roomId == -1) {
+    printf("Pokoj jest pelen!\n");
+  } else {
     printf("Dolaczono do pokoju o id %d\n",roomId);
   }
+  
   
 }
 

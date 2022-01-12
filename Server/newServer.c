@@ -20,18 +20,19 @@ struct JoinRoomMsg {
   int roomId;
 };
 
-struct ListMsg {
-  long mtype;
-  int clientKeyId;
-  char lista
-};
-
 struct Room{
   int id;
   int numOfClients;
   int clientListId[5];
   char clientListNames[5][20];
 };
+
+struct RoomListMsg {
+  long mtype;
+  int clientKeyId;
+  struct Room roomList[5]; 
+};
+
 
 struct ConnectMsg {
   long mtype;
@@ -138,7 +139,13 @@ void addClientToRoom() {
             msgsnd(join.clientKeyId, &join, sizeof(join), 0);
             break;
           }
+          if (j == 4) {
+            printf("Pokoj nr. %d jest pelen!\n",join.roomId);
+            join.roomId = -1;
+            msgsnd(join.clientKeyId, &join, sizeof(join), 0);
+          }
         }
+        break;
       }
     }
   } else {
@@ -146,9 +153,14 @@ void addClientToRoom() {
   }
 }
 
-// void getClientName(char* name, int id) {
-//   for (int i = 0; i <)
-// }
+void getClientNameById(char* name, int id) {
+  for (int i = 0; i < sizeof(SERVER_LIST[0].clientList)/sizeof(SERVER_LIST[0].clientList[0]); i++) {
+    if (SERVER_LIST[0].clientList[i].clientKeyId == id) {
+      strcpy(name,SERVER_LIST[0].clientList[i].name);
+      break;
+    }
+  }
+}
 
 int checkIfClientIsValid(struct Client newClient) {
   int check = 0;
@@ -220,24 +232,12 @@ void sendClientList(){
 }
 
 void sendChannelList(){
-  struct Msg channelListMsg;
-  if (msgrcv(KEY, &channelListMsg, sizeof(channelListMsg), 4, IPC_NOWAIT) != -1) {
-    strcpy(channelListMsg.message, "");
-    char number[1];
-    char mTypeInRoom[10];
-    for (int i = 0; i < CHANNELS;i++) {
-      number[0] = SERVER_LIST[0].roomList[i].id+'0';
-      strcat(channelListMsg.message,number);
-      strcat(channelListMsg.message,".\t");
-      for(int j = 0; j< sizeof(SERVER_LIST[0].roomList[i].clientListId)/sizeof(SERVER_LIST[0].roomList[i].clientListId[i]);j++){
-        mTypeInRoom[0]=SERVER_LIST[0].roomList[i].clientListId[j]+'0';
-        strcat(channelListMsg.message,mTypeInRoom);
-      }
-      
-      strcat(channelListMsg.message,"\n");
+  struct RoomListMsg roomMsg;
+  if (msgrcv(KEY, &roomMsg, sizeof(roomMsg), 4, IPC_NOWAIT) != -1) {
+    for(int i = 0; i < sizeof(SERVER_LIST[0].roomList)/sizeof(SERVER_LIST[0].roomList[0]); i++) {
+      roomMsg.roomList[i] = SERVER_LIST[0].roomList[i];
     }
-    channelListMsg.mtype=4;
-    msgsnd(channelListMsg.clientKeyId, &channelListMsg, sizeof(channelListMsg), 0);
+    msgsnd(roomMsg.clientKeyId, &roomMsg, sizeof(roomMsg), 0);
   } else {
     printf("Brak request-u ChannelList\n");
   }
@@ -257,7 +257,6 @@ void printRoomsList() {
     printf("\n");
   }
 }
-
 
 int main() {
   KEY = msgget(1234567890,0644|IPC_CREAT);

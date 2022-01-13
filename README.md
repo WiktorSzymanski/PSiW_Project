@@ -10,7 +10,8 @@ Client mtype:
     4 - lista pokoi
     5 - dołączanie do pokoi
     6 - wychodzenie z pokoju
-    7 - wysyłanie/odbieranie wiadomosci
+    7 - wysyłanie/odbieranie wiadomosci prywatnych
+    8 - wysyłanie/odbieranie wiadomosci kanału
 Server mtype:
     1 - łączenie się klienta
     2 - rozłączanie klienta
@@ -18,4 +19,5 @@ Server mtype:
     4 - lista pokoi
     5 - dołączanie do pokoi
     6 - wychodzenie z pokoju
-    7 - wysyłanie/odbieranie wiadomosci
+    7 - wysyłanie/odbieranie wiadomosci prywatnych
+    8 - wysyłanie/odbieranie wiadomosci kanału

@@ -190,6 +190,7 @@ void inRoom(int roomId) {
       char *line = NULL;
       size_t len = 0;
       getline(&line,&len,stdin);
+      struct Msg message;
       
       if(line[0] == ':') {
         if(line[1] == 'q') {
@@ -204,7 +205,6 @@ void inRoom(int roomId) {
           char str3[1024];
           splitStringIntoTwo(line, str1, str2, ' ');
           splitStringIntoTwo(str2, str1, str3, ' ');
-          struct Msg message;
           message.mtype = 7;
           message.clientKeyId = CLIENT_KEY_ID;
           message.roomId = roomId;
@@ -212,6 +212,12 @@ void inRoom(int roomId) {
           strcpy(message.toClientName,str1);
           msgsnd(KEY, &message, sizeof(message), 0);
         }
+      } else {
+        message.mtype = 8;
+        message.clientKeyId = CLIENT_KEY_ID;
+        message.roomId = roomId;
+        strcpy(message.message,line);
+        msgsnd(KEY, &message, sizeof(message), 0);
       }
     }
   } else {
@@ -219,6 +225,8 @@ void inRoom(int roomId) {
     while(1) {
       if (msgrcv(CLIENT_KEY_ID, &message, sizeof(message), 7, IPC_NOWAIT) != -1) {
         printf("Private Message from %s: %s\n",message.toClientName,message.message);
+      } else if (msgrcv(CLIENT_KEY_ID, &message, sizeof(message), 8, IPC_NOWAIT) != -1) {
+        printf("%s: %s",message.toClientName, message.message);
       } else {
         // printf("\n");
         sleep(1);

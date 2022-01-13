@@ -228,6 +228,29 @@ void getAndSendMsg() {
   }
 }
 
+void getAndSendRoomMsg() {
+  struct Msg message;
+  if(msgrcv(KEY, &message, sizeof(message), 8, IPC_NOWAIT) != -1) {
+    for(int i = 0; i < sizeof(SERVER_LIST[0].roomList)/sizeof(SERVER_LIST[0].roomList[0]); i++) {
+      if(SERVER_LIST[0].roomList[i].id == message.roomId) {
+        for(int j = 0; j < sizeof(SERVER_LIST[0].roomList[i].clientListId)/sizeof(SERVER_LIST[0].roomList[i].clientListId[0]); j++) {
+          if(SERVER_LIST[0].roomList[i].clientListId[j] != 0 && SERVER_LIST[0].roomList[i].clientListId[j] != message.clientKeyId) {
+            char name[20];
+            getClientNameById(name,message.clientKeyId);
+            strcpy(message.toClientName,name);
+            message.mtype = 8;
+            msgsnd(SERVER_LIST[0].roomList[i].clientListId[j], &message, sizeof(message), 0);
+            printf("Odebrano i przeslano wiadomosc do urzytkownika pokoju %d\n", message.roomId);
+          }
+        }
+        break;
+      }
+    }
+  } else {
+    printf("Brak request-u getAndSendRoomMsg\n");
+  }
+}
+
 int checkIfClientIsValid(struct Client newClient) {
   int check = 0;
   if (!checkIfNameUniq(newClient.name)) {
@@ -355,6 +378,7 @@ int main() {
     addClientToRoom();
     removeClientFromRoom();
     getAndSendMsg();
+    getAndSendRoomMsg();
     
 
     // printf("Wpisz 1 \n");

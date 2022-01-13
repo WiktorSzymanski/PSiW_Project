@@ -32,6 +32,7 @@ void splitStringIntoTwo(char *toSplit, char *str1, char *str2, char splitBy) {
       str2[i - lenOfFirstStr] = toSplit[i];
     }
   }
+  str2[length(toSplit) - lenOfFirstStr] = '\0';
 }
 
 int main() {
@@ -43,6 +44,7 @@ int main() {
     printf("%s - %d\n", line,length(line));
     char str1[20];
     char str2[1024];
+
     splitStringIntoTwo(line, str1, str2, ' ');
 
     printf("%s\n",str1);

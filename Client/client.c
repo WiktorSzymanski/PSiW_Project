@@ -50,7 +50,7 @@ int length(char* string) {
       result++;
       continue;
     }
-    return result;
+    return result - (string[result-1] == '\n');
   }
 }
 
@@ -173,9 +173,10 @@ void splitStringIntoTwo(char *toSplit, char *str1, char *str2, char splitBy) {
         str1[i] = toSplit[i];
       }
     } else {
-      str2[i - (lenOfFirstStr + 1)] = toSplit[i];
+      str2[i - lenOfFirstStr] = toSplit[i];
     }
   }
+  str2[length(toSplit) - lenOfFirstStr] = '\0';
 }
 
 void inRoom(int roomId) {

@@ -164,6 +164,28 @@ void addClientToRoom() {
   }
 }
 
+void removeClientFromRoom() {
+  struct JoinRoomMsg leave;
+  if (msgrcv(KEY, &leave, sizeof(leave), 6, IPC_NOWAIT) != -1) {
+    for(int i = 0; i < sizeof(SERVER_LIST[0].roomList)/sizeof(SERVER_LIST[0].roomList[0]); i++) {
+      if (SERVER_LIST[0].roomList[i].id == leave.roomId) {
+        for(int j = 0; j < sizeof(SERVER_LIST[0].roomList[i].clientListId)/sizeof(SERVER_LIST[0].roomList[i].clientListId[0]); j++) {
+          if(SERVER_LIST[0].roomList[i].clientListId[j] == leave.clientKeyId) {
+            SERVER_LIST[0].roomList[i].clientListId[j] = 0;
+            char name[20] = "                    ";
+            strcpy(SERVER_LIST[0].roomList[i].clientListNames[j],name);
+            msgsnd(leave.clientKeyId, &leave, sizeof(leave), 0);
+            break;
+          }
+        }
+        break;
+      }
+    }
+  } else {
+    printf("Brak request-u removeClientFromRoom\n");
+  }
+}
+
 int checkIfClientIsValid(struct Client newClient) {
   int check = 0;
   if (!checkIfNameUniq(newClient.name)) {
@@ -286,6 +308,7 @@ int main() {
     sendClientList();
     sendChannelList();
     addClientToRoom();
+    removeClientFromRoom();
     
 
     // printf("Wpisz 1 \n");

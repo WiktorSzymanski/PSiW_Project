@@ -151,6 +151,26 @@ int connectToServer() {
   return clientKeyId;
 }
 
+void inRoom(int roomId) {
+  while(1) {
+    printf("Wpisz :q aby wyjsc z pokoju\n");
+    char quit[2];
+    scanf("%s",quit);
+    
+    if(strcmp(quit,":q") == 0) {
+      printf("Wychodzenie z pokoju\n");
+      struct JoinRoomMsg leaveRoom;
+      leaveRoom.mtype = 6;
+      leaveRoom.clientKeyId = CLIENT_KEY_ID;
+      leaveRoom.roomId = roomId;
+      msgsnd(KEY, &leaveRoom, sizeof(leaveRoom),0);
+      msgrcv(CLIENT_KEY_ID, &leaveRoom, sizeof(leaveRoom), 6, 0);
+      printf("Pomyslnie opuszczono pokoj\n");
+      return;
+    }
+  }
+}
+
 void joinRoom() {
   struct JoinRoomMsg join;
   join.mtype = 5;
@@ -169,9 +189,8 @@ void joinRoom() {
     printf("Pokoj jest pelen!\n");
   } else {
     printf("Dolaczono do pokoju o id %d\n",roomId);
+    inRoom(roomId);
   }
-  
-  
 }
 
 void loggedInMenu() {

@@ -9,9 +9,11 @@ Client mtype:
     3 - lista urzytkownikow
     4 - lista pokoi
     5 - dołączanie do pokoi
+    6 - wychodzenie z pokoju
 Server mtype:
     1 - łączenie się klienta
     2 - rozłączanie klienta
     3 - lista urzytkownikow
     4 - lista pokoi
     5 - dołączanie do pokoi
+    6 - wychodzenie z pokoju

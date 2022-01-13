@@ -36,12 +36,12 @@ struct RoomListMsg {
 
 struct ConnectMsg {
   long mtype;
-  char name[19];
+  char name[20];
   int clientKeyId;
 };
 
 struct Client {
-  char name[19];
+  char name[20];
   int clientKeyId;
 };
 
@@ -127,6 +127,15 @@ int checkIfKeyIdUniq(int mtype) {
   return 1;
 }
 
+void getClientNameById(char* name, int id) {
+  for (int i = 0; i < sizeof(SERVER_LIST[0].clientList)/sizeof(SERVER_LIST[0].clientList[0]); i++) {
+    if (SERVER_LIST[0].clientList[i].clientKeyId == id) {
+      strcpy(name,SERVER_LIST[0].clientList[i].name);
+      break;
+    }
+  }
+}
+
 void addClientToRoom() {
   struct JoinRoomMsg join;
   if (msgrcv(KEY, &join, sizeof(join), 5, IPC_NOWAIT) != -1) {
@@ -135,7 +144,9 @@ void addClientToRoom() {
         for(int j = 0; j < sizeof(SERVER_LIST[0].roomList[i].clientListId)/sizeof(SERVER_LIST[0].roomList[i].clientListId[0]); j++) {
           if(SERVER_LIST[0].roomList[i].clientListId[j] == 0) {
             SERVER_LIST[0].roomList[i].clientListId[j] = join.clientKeyId;
-            // SERVER_LIST[0].roomList[i].clientListNames[j] = 
+            char name[20];
+            getClientNameById(name,join.clientKeyId);
+            strcpy(SERVER_LIST[0].roomList[i].clientListNames[j],name);
             msgsnd(join.clientKeyId, &join, sizeof(join), 0);
             break;
           }
@@ -150,15 +161,6 @@ void addClientToRoom() {
     }
   } else {
     printf("Brak request-u addClientToRoom\n");
-  }
-}
-
-void getClientNameById(char* name, int id) {
-  for (int i = 0; i < sizeof(SERVER_LIST[0].clientList)/sizeof(SERVER_LIST[0].clientList[0]); i++) {
-    if (SERVER_LIST[0].clientList[i].clientKeyId == id) {
-      strcpy(name,SERVER_LIST[0].clientList[i].name);
-      break;
-    }
   }
 }
 
@@ -247,7 +249,7 @@ void printRoom(struct Room toPrint) {
   printf("Room Id: %d\n", toPrint.id);
 
   for (int i = 0; i < sizeof(toPrint.clientListId)/sizeof(toPrint.clientListId[0]); i++) {
-    printf("Nr. %d\tKlient %d\n",i, toPrint.clientListId[i]);
+    printf("Nr. %d\tClientId %d\n",i, toPrint.clientListId[i]);
   }
 }
 
@@ -271,6 +273,8 @@ int main() {
     newRoom.id = i;
     for(int j = 0 ; j < sizeof(newRoom.clientListId)/sizeof(newRoom.clientListId[0]); j++) {
       newRoom.clientListId[j] = 0;
+      char name[20];
+      strcpy(*newRoom.clientListNames,name);
     }
     SERVER_LIST[0].roomList[i] = newRoom;
   }

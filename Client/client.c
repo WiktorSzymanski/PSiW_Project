@@ -107,7 +107,12 @@ void printRoom(struct Room toPrint) {
   printf("Room Id: %d\n", toPrint.id);
 
   for (int i = 0; i < sizeof(toPrint.clientListId)/sizeof(toPrint.clientListId[0]); i++) {
-    printf("Nr. %d\tKlient %d\n",i, toPrint.clientListId[i]);
+    if (toPrint.clientListId[i] != 0) {
+      printf("Nr. %d\t %s\n",i, toPrint.clientListNames[i]);
+    } else {
+      printf("Nr. %d\t \n",i);
+    }
+
   }
 }
 

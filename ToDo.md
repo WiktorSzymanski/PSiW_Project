@@ -3,7 +3,7 @@ Client
 +   • zarejestrowanie użytkownika w zadanym serwerze, 
 +   • wyświetlanie listy użytkowników zalogowanych na serwerze, 
 +   • wyświetlenie listy zarejestrowanych kanałów (pokoi)
-+/-   • wyświetlenie listy użytkowników zapisanych do pokoi
++   • wyświetlenie listy użytkowników zapisanych do pokoi
 +   • zapisanie się użytkownika do pokoju
 -   • wypisanie się użytkownika z pokoju
 -   • wyświetlanie czatu prowadzonego na wskazanym kanale (każda wiadomość to czas wysłania,nazwa użytkownika i treść) 10wiad

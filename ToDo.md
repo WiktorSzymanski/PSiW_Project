@@ -5,7 +5,7 @@ Client
 +   • wyświetlenie listy zarejestrowanych kanałów (pokoi)
 +   • wyświetlenie listy użytkowników zapisanych do pokoi
 +   • zapisanie się użytkownika do pokoju
--   • wypisanie się użytkownika z pokoju
++   • wypisanie się użytkownika z pokoju
 -   • wyświetlanie czatu prowadzonego na wskazanym kanale (każda wiadomość to czas wysłania,nazwa użytkownika i treść) 10wiad
 -   • możliwość wysłania wiadomości na wskazany kanał
 -   • możliwość odebrania wiadomości z kanału

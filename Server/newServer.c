@@ -59,6 +59,7 @@ struct Msg {
   char message[1024];
   int clientKeyId;
   char toClientName[20];
+  int roomId;
 };
 
 void printClient(struct Client toPrint) {
@@ -197,6 +198,36 @@ void removeClientFromRoom() {
   }
 }
 
+void getAndSendMsg() {
+  struct Msg message;
+  if(msgrcv(KEY, &message, sizeof(message), 7, IPC_NOWAIT) != -1) {
+    for(int i = 0; i < sizeof(SERVER_LIST[0].roomList)/sizeof(SERVER_LIST[0].roomList[0]); i++) {
+      if(SERVER_LIST[0].roomList[i].id == message.roomId) {
+        for(int j = 0; j < sizeof(SERVER_LIST[0].roomList[i].clientListId)/sizeof(SERVER_LIST[0].roomList[i].clientListId[0]); j++) {
+          if(strcmp(SERVER_LIST[0].roomList[i].clientListNames[j],message.toClientName) == 0) {
+            char name[20];
+            getClientNameById(name,message.clientKeyId);
+            strcpy(message.toClientName,name);
+            message.mtype = 7;
+            printf("%s\n",message.toClientName);
+            printf("%d\n",SERVER_LIST[0].roomList[i].clientListId[j]);
+            // sleep(10);
+            msgsnd(SERVER_LIST[0].roomList[i].clientListId[j], &message, sizeof(message), 0);
+            printf("Odebrano i przeslano wiadomosc\n");
+            break;
+          }
+          if(j == sizeof(SERVER_LIST[0].roomList[i].clientListId)/sizeof(SERVER_LIST[0].roomList[i].clientListId[0]) - 1) {
+            printf("Brak klienta w pokokju\n");
+          }
+        }
+        break;
+      }
+    }
+  } else {
+    printf("Brak request-u getAndSendMsg\n");
+  }
+}
+
 int checkIfClientIsValid(struct Client newClient) {
   int check = 0;
   if (!checkIfNameUniq(newClient.name)) {
@@ -323,6 +354,7 @@ int main() {
     sendChannelList();
     addClientToRoom();
     removeClientFromRoom();
+    getAndSendMsg();
     
 
     // printf("Wpisz 1 \n");

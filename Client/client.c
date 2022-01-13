@@ -41,6 +41,7 @@ struct Msg {
   char message[1024];
   int clientKeyId;
   char toClientName[20];
+  int roomId;
 };
 
 int length(char* string) {
@@ -180,23 +181,48 @@ void splitStringIntoTwo(char *toSplit, char *str1, char *str2, char splitBy) {
 }
 
 void inRoom(int roomId) {
-  while(1) {
-    printf(":q - wyjdz z pokoju\n");
-    printf(":p <nazwa klienta> <wiadomosc> - wyslij wiadomosc prywadna\n");
-    char *line = NULL;
-    size_t len = 0;
-    getline(&line,&len,stdin);
-    
-    if(line[0] == ':') {
-      if(line[1] == 'q') {
-        printf("Wychodzenie z pokoju\n");
-        leaveRoom(roomId);
-      }
 
-      // if(line[1] == 'p') {
-      //   char *token = strtok(line," ");
-      //   printf()
-      // }
+  printf(":q - wyjdz z pokoju\n");
+  printf(":p <nazwa klienta> <wiadomosc> - wyslij wiadomosc prywadna\n");
+  
+  if(fork() == 0) {
+    while(1) {
+      char *line = NULL;
+      size_t len = 0;
+      getline(&line,&len,stdin);
+      
+      if(line[0] == ':') {
+        if(line[1] == 'q') {
+          printf("Wychodzenie z pokoju\n");
+          leaveRoom(roomId);
+          return;
+        }
+
+        if(line[1] == 'p') {
+          char str1[20];
+          char str2[1045];
+          char str3[1024];
+          splitStringIntoTwo(line, str1, str2, ' ');
+          splitStringIntoTwo(str2, str1, str3, ' ');
+          struct Msg message;
+          message.mtype = 7;
+          message.clientKeyId = CLIENT_KEY_ID;
+          message.roomId = roomId;
+          strcpy(message.message,str3);
+          strcpy(message.toClientName,str1);
+          msgsnd(KEY, &message, sizeof(message), 0);
+        }
+      }
+    }
+  } else {
+    struct Msg message;
+    while(1) {
+      if (msgrcv(CLIENT_KEY_ID, &message, sizeof(message), 7, IPC_NOWAIT) != -1) {
+        printf("Private Message from %s: %s\n",message.toClientName,message.message);
+      } else {
+        // printf("\n");
+        sleep(1);
+      }
     }
   }
 }

@@ -40,6 +40,7 @@ struct Msg {
   long mtype;
   char message[1024];
   int clientKeyId;
+  char toClientName[20];
 };
 
 int length(char* string) {
@@ -151,22 +152,50 @@ int connectToServer() {
   return clientKeyId;
 }
 
+void leaveRoom(int roomId) {
+  struct JoinRoomMsg leaveRoom;
+  leaveRoom.mtype = 6;
+  leaveRoom.clientKeyId = CLIENT_KEY_ID;
+  leaveRoom.roomId = roomId;
+  msgsnd(KEY, &leaveRoom, sizeof(leaveRoom),0);
+  msgrcv(CLIENT_KEY_ID, &leaveRoom, sizeof(leaveRoom), 6, 0);
+  printf("Pomyslnie opuszczono pokoj\n");
+  return;
+}
+
+void splitStringIntoTwo(char *toSplit, char *str1, char *str2, char splitBy) {
+  int lenOfFirstStr = 0;
+  for(int i = 0; i < length(toSplit); i++) {
+    if (lenOfFirstStr == 0) {
+      if (toSplit[i] == splitBy) {
+        lenOfFirstStr = i+1;
+      } else {
+        str1[i] = toSplit[i];
+      }
+    } else {
+      str2[i - (lenOfFirstStr + 1)] = toSplit[i];
+    }
+  }
+}
+
 void inRoom(int roomId) {
   while(1) {
-    printf("Wpisz :q aby wyjsc z pokoju\n");
-    char quit[2];
-    scanf("%s",quit);
+    printf(":q - wyjdz z pokoju\n");
+    printf(":p <nazwa klienta> <wiadomosc> - wyslij wiadomosc prywadna\n");
+    char *line = NULL;
+    size_t len = 0;
+    getline(&line,&len,stdin);
     
-    if(strcmp(quit,":q") == 0) {
-      printf("Wychodzenie z pokoju\n");
-      struct JoinRoomMsg leaveRoom;
-      leaveRoom.mtype = 6;
-      leaveRoom.clientKeyId = CLIENT_KEY_ID;
-      leaveRoom.roomId = roomId;
-      msgsnd(KEY, &leaveRoom, sizeof(leaveRoom),0);
-      msgrcv(CLIENT_KEY_ID, &leaveRoom, sizeof(leaveRoom), 6, 0);
-      printf("Pomyslnie opuszczono pokoj\n");
-      return;
+    if(line[0] == ':') {
+      if(line[1] == 'q') {
+        printf("Wychodzenie z pokoju\n");
+        leaveRoom(roomId);
+      }
+
+      // if(line[1] == 'p') {
+      //   char *token = strtok(line," ");
+      //   printf()
+      // }
     }
   }
 }
@@ -214,8 +243,13 @@ void loggedInMenu() {
       msgsnd(KEY, &connect, sizeof(connect),0);
     }
   }
-
-  printf("%s", message.message);
+  if(strcmp(message.message,"Poloczono z serwerem\n") == 0) {
+    printf("%s", message.message);
+  } else {
+    printf("%s", message.message);
+    return;
+  }
+  
 
   while(1){
     printf("[1] Wyswietl liste kanalow\n[2] Wyswietl liste uzytkownikow\n[3] Dolacz do pokoju\n[9] Wyloguj sie\n[0] Wyjdz\nCo chcesz zrobic: ");

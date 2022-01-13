@@ -58,6 +58,7 @@ struct Msg {
   long mtype;
   char message[1024];
   int clientKeyId;
+  char toClientName[20];
 };
 
 void printClient(struct Client toPrint) {
@@ -76,6 +77,16 @@ void sendConnectionEstablishedMsg(int clientKeyId) {
 
   message.mtype = 1;
   strcpy(message.message,"Poloczono z serwerem\n");
+
+  msgsnd(clientKeyId, &message, sizeof(message), 0);
+  printf("Wyslano wiadomosc do klienta o mtype: %d\n",clientKeyId);
+}
+
+void sendServerFullMsg(int clientKeyId) {
+  struct Msg message;
+
+  message.mtype = 1;
+  strcpy(message.message,"Serwer pelen!\n");
 
   msgsnd(clientKeyId, &message, sizeof(message), 0);
   printf("Wyslano wiadomosc do klienta o mtype: %d\n",clientKeyId);
@@ -226,6 +237,9 @@ void addClient() {
           SERVER_LIST[0].clientList[i] = newClient;
           sendConnectionEstablishedMsg(newClient.clientKeyId);
           break;
+        }
+        if(i == 4) {
+          sendServerFullMsg(newClient.clientKeyId);
         }
       }
     } else {

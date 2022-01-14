@@ -231,7 +231,7 @@ void inRoom(int roomId) {
         printf("%s: %s",message.toClientName, message.message);
       } else {
         // printf("\n");
-        sleep(1);
+        sleep(0.01);
       }
     }
   }

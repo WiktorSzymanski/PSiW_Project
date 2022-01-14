@@ -20,6 +20,30 @@ struct JoinRoomMsg {
   int roomId;
 };
 
+struct ConnectMsg {
+  long mtype;
+  char name[20];
+  int clientKeyId;
+};
+
+struct Client {
+  char name[20];
+  int clientKeyId;
+};
+
+struct Msg {
+  long mtype;
+  char message[1024];
+  int clientKeyId;
+  char toClientName[20];
+  int roomId;
+};
+
+// struct MessageData {
+//   char message[1024];
+//   char clientName[20];
+// }
+
 struct Room{
   int id;
   int numOfClients;
@@ -33,18 +57,6 @@ struct RoomListMsg {
   struct Room roomList[5]; 
 };
 
-
-struct ConnectMsg {
-  long mtype;
-  char name[20];
-  int clientKeyId;
-};
-
-struct Client {
-  char name[20];
-  int clientKeyId;
-};
-
 struct Server {
   char name[10];
   int id;
@@ -53,14 +65,6 @@ struct Server {
   struct Client clientList[5];
   struct Room roomList[5];
 } THIS_SERVER;
-
-struct Msg {
-  long mtype;
-  char message[1024];
-  int clientKeyId;
-  char toClientName[20];
-  int roomId;
-};
 
 void printClient(struct Client toPrint) {
   printf("%s\t%d\n",toPrint.name,toPrint.clientKeyId);

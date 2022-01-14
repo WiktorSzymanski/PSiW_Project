@@ -244,7 +244,7 @@ void getAndSendRoomMsg() {
             strcpy(message.toClientName,name);
             message.mtype = 8;
             msgsnd(SERVER_LIST[0].roomList[i].clientListId[j], &message, sizeof(message), 0);
-            printf("Odebrano i przeslano wiadomosc do urzytkownika pokoju %d\n", message.roomId);
+            printf("Odebrano i przeslano wiadomosc do uzytkownika pokoju %d\n", message.roomId);
           }
         }
         break;

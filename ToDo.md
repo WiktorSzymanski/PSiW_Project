@@ -17,7 +17,7 @@ Client
 Serwer
 +   • rejestrowanie i wyrejestrowanie użytkowników
 + • przesłanie na żądanie klienta listy użytkowników / kanałów / użytkowników korzystających z kanału
--   • rejestrowanie nowego kanału
++/-   • rejestrowanie nowego kanału
 +   • zapisanie/wypisanie użytkownika do/z kanału
 +  • odbiór i przesłanie odebranych wiadomości do wszystkich swoich użytkowników korzystających z danego kanału
 +   • odbiór i przesłanie wiadomości prywatnych do wskazanego użytkownika na tym serwerze

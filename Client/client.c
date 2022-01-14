@@ -126,8 +126,10 @@ void getChannelList(){
   msgrcv(CLIENT_KEY_ID, &listRequest, sizeof(listRequest), 4, 0);
 
   for(int i = 0; i < sizeof(listRequest.roomList)/sizeof(listRequest.roomList[0]); i++) {
-    printRoom(listRequest.roomList[i]);
-    printf("\n");
+    if (listRequest.roomList[i].id != -1) {
+      printRoom(listRequest.roomList[i]);
+      printf("\n");
+    }
   }
 }
 
@@ -235,7 +237,21 @@ void inRoom(int roomId) {
   }
 }
 
+void addRoom() {
+  struct Msg roomMsg;
+  roomMsg.mtype = 9;
+  roomMsg.clientKeyId = CLIENT_KEY_ID;
+  msgsnd(KEY,&roomMsg, sizeof(roomMsg), 0);
+  msgrcv(CLIENT_KEY_ID,&roomMsg, sizeof(roomMsg), 9, 0);
+  if (roomMsg.roomId == -1) {
+    printf("Maksymalna liczba pokoi osiągnieta, nie można dodać kolejnego\n");
+  } else {
+    printf("Dodano pokoj o id %d\n", roomMsg.roomId);
+  }
+}
+
 void joinRoom() {
+  // TODO - co jesli wpisze id pokoju którego nie ma?
   struct JoinRoomMsg join;
   join.mtype = 5;
   join.clientKeyId = CLIENT_KEY_ID;
@@ -287,7 +303,7 @@ void loggedInMenu() {
   
 
   while(1){
-    printf("[1] Wyswietl liste kanalow\n[2] Wyswietl liste uzytkownikow\n[3] Dolacz do pokoju\n[9] Wyloguj sie\n[0] Wyjdz\nCo chcesz zrobic: ");
+    printf("[1] Wyswietl liste kanalow\n[2] Wyswietl liste uzytkownikow\n[3] Dolacz do pokoju\n[4] Stworz nowy pokoj\n[9] Wyloguj sie\n[0] Wyjdz\nCo chcesz zrobic: ");
     int operation;
     scanf("%d",&operation);
     switch (operation) {
@@ -300,14 +316,14 @@ void loggedInMenu() {
         if(disconnectFromServer() == 0) {
           sleep(1);
           printf("Odlaczono od serwera clientKeyId: %d\n",CLIENT_KEY_ID);
-          msgctl(CLIENT_KEY_ID, IPC_RMID,&message);
+          msgctl(CLIENT_KEY_ID, IPC_RMID,0);
         }
         return;
       case 0:
         if(disconnectFromServer() == 0) {
           sleep(1);
           printf("Odlaczono od serwera clientKeyId: %d\n",CLIENT_KEY_ID);
-          msgctl(CLIENT_KEY_ID, IPC_RMID,&message);
+          msgctl(CLIENT_KEY_ID, IPC_RMID,0);
         }
         exit(0);
         break;
@@ -317,6 +333,9 @@ void loggedInMenu() {
         break;
       case 3:
         joinRoom();
+        break;
+      case 4:
+        addRoom();
         break;
     }
   }

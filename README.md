@@ -1,6 +1,6 @@
 # PSiW_Project
 gcc -fno-stack-protector newServer.c -o newServer
-gcc client.c -o client
+gcc -fno-stack-protector client.c -o client
 
 
 Client mtype:
@@ -12,6 +12,7 @@ Client mtype:
     6 - wychodzenie z pokoju
     7 - wysyłanie/odbieranie wiadomosci prywatnych
     8 - wysyłanie/odbieranie wiadomosci kanału
+    9 - dodawanie pokoju
 Server mtype:
     1 - łączenie się klienta
     2 - rozłączanie klienta
@@ -21,3 +22,4 @@ Server mtype:
     6 - wychodzenie z pokoju
     7 - wysyłanie/odbieranie wiadomosci prywatnych
     8 - wysyłanie/odbieranie wiadomosci kanału
+    9 - dodawanie pokoju

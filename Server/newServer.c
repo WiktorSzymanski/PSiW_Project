@@ -104,7 +104,7 @@ void disconnectClient() {
         break;
       }
     }
-    msgctl(disconnect.clientKeyId, IPC_RMID,&disconnect);
+    msgctl(disconnect.clientKeyId, IPC_RMID,0);
     printf("Klient %d oposcil serwer\n",disconnect.clientKeyId);
   } else {
     printf("Brak request-u disconnectClient\n");
@@ -350,6 +350,28 @@ void printRoomsList() {
   }
 }
 
+void addRooom() {
+  struct Msg roomMsg;
+  if (msgrcv(KEY, &roomMsg, sizeof(roomMsg), 9, IPC_NOWAIT) != -1) {
+    for(int i = 0; i < sizeof(SERVER_LIST[0].roomList)/sizeof(SERVER_LIST[0].roomList[0]); i++) {
+      if (SERVER_LIST[0].roomList[i].id == -1) {
+        SERVER_LIST[0].roomList[i].id = i;
+        roomMsg.roomId = i;
+        msgsnd(roomMsg.clientKeyId, &roomMsg, sizeof(roomMsg), 0);
+        break;
+      }
+
+      if (i == sizeof(SERVER_LIST[0].roomList)/sizeof(SERVER_LIST[0].roomList[0]) - 1) {
+        roomMsg.roomId = -1;
+        msgsnd(roomMsg.clientKeyId, &roomMsg, sizeof(roomMsg), 0);
+        printf("Max 5 pokoi\n");
+      }
+    }
+  } else {
+    printf("Brak request-u addRooom\n");
+  }
+}
+
 int main() {
   KEY = msgget(1234567890,0644|IPC_CREAT);
   int shmId = shmget(12345678,8,0644|IPC_CREAT);
@@ -360,7 +382,11 @@ int main() {
   
   for(int i=0;i<CHANNELS;i++){
     struct Room newRoom;
-    newRoom.id = i;
+    if (i != 0) {
+      newRoom.id = -1;
+    } else {
+      newRoom.id = i;
+    }
     for(int j = 0 ; j < sizeof(newRoom.clientListId)/sizeof(newRoom.clientListId[0]); j++) {
       newRoom.clientListId[j] = 0;
       char name[20];
@@ -379,7 +405,7 @@ int main() {
     removeClientFromRoom();
     getAndSendMsg();
     getAndSendRoomMsg();
-    
+    addRooom();
 
     // printf("Wpisz 1 \n");
     // int x;

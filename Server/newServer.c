@@ -10,6 +10,7 @@
 #include <stdlib.h>
 
 #define CHANNELS 5
+#define MAX_NUM_OF_SEC_OF_INACTIVITY 5
 
 int KEY;
 struct Server *SERVER_LIST;
@@ -29,6 +30,7 @@ struct ConnectMsg {
 struct Client {
   char name[20];
   int clientKeyId;
+  int secOfInactivity;
 };
 
 struct Msg {
@@ -67,7 +69,7 @@ struct Server {
 } THIS_SERVER;
 
 void printClient(struct Client toPrint) {
-  printf("%s\t%d\n",toPrint.name,toPrint.clientKeyId);
+  printf("%s\t%d\tsecOfInactivity:%d\n",toPrint.name,toPrint.clientKeyId,toPrint.secOfInactivity);
 }
 
 void printClientList() {
@@ -97,19 +99,22 @@ void sendServerFullMsg(int clientKeyId) {
   printf("Wyslano wiadomosc do klienta o mtype: %d\n",clientKeyId);
 }
 
-void disconnectClient() {
-  struct ConnectMsg disconnect;
-  if (msgrcv(KEY, &disconnect, sizeof(disconnect), 2, IPC_NOWAIT) != -1) {
-
-    for (int i = 0; i < sizeof(SERVER_LIST[0].clientList)/sizeof(SERVER_LIST[0].clientList[0]);i++) {
-      if (SERVER_LIST[0].clientList[i].clientKeyId == disconnect.clientKeyId) {
-        strcpy(SERVER_LIST[0].clientList[i].name,"");
-        SERVER_LIST[0].clientList[i].clientKeyId = 0;
-        break;
-      }
+void disconnect(int clientKeyId) {
+  for (int i = 0; i < sizeof(SERVER_LIST[0].clientList)/sizeof(SERVER_LIST[0].clientList[0]);i++) {
+    if (SERVER_LIST[0].clientList[i].clientKeyId == clientKeyId) {
+      strcpy(SERVER_LIST[0].clientList[i].name,"");
+      SERVER_LIST[0].clientList[i].clientKeyId = 0;
+      break;
     }
-    msgctl(disconnect.clientKeyId, IPC_RMID,0);
-    printf("Klient %d oposcil serwer\n",disconnect.clientKeyId);
+  }
+  msgctl(clientKeyId, IPC_RMID,0);
+  printf("Klient %d oposcil serwer\n",clientKeyId);
+}
+
+void disconnectClient() {
+  struct ConnectMsg dis;
+  if (msgrcv(KEY, &dis, sizeof(dis), 2, IPC_NOWAIT) != -1) {
+    disconnect(dis.clientKeyId);
   } else {
     printf("Brak request-u disconnectClient\n");
   }
@@ -286,6 +291,7 @@ void addClient() {
     struct Client newClient;
     strcpy(newClient.name,connect.name);
     newClient.clientKeyId = connect.clientKeyId;
+    newClient.secOfInactivity = 0;
 
     if (checkIfClientIsValid(newClient) == 1) {
       printClient(newClient);
@@ -376,6 +382,25 @@ void addRooom() {
   }
 }
 
+void updateInactivity() {
+  for(int i = 0; i < 5; i++) {
+    if (SERVER_LIST[0].clientList[i].clientKeyId != 0) {
+      if (SERVER_LIST[0].clientList[i].secOfInactivity >= MAX_NUM_OF_SEC_OF_INACTIVITY) {
+        printf("Client with id %d out due to Inactivity\n",SERVER_LIST[0].clientList[i].clientKeyId);
+        struct Msg out;
+        out.mtype = 10;
+        msgsnd(SERVER_LIST[0].clientList[i].clientKeyId, &out, sizeof(out),0);
+        printf("Wyslano disconect wiadomosc do %d o mtype %ld\n",SERVER_LIST[0].clientList[i].clientKeyId,out.mtype);
+        sleep(10);
+        disconnect(SERVER_LIST[0].clientList[i].clientKeyId);
+        SERVER_LIST[0].clientList[i].secOfInactivity = 0;
+      } else {
+        SERVER_LIST[0].clientList[i].secOfInactivity++;
+      }
+    }
+  }
+}
+
 int main() {
   KEY = msgget(1234567890,0644|IPC_CREAT);
   int shmId = shmget(12345678,8,0644|IPC_CREAT);
@@ -410,6 +435,7 @@ int main() {
     getAndSendMsg();
     getAndSendRoomMsg();
     addRooom();
+    updateInactivity();
 
     // printf("Wpisz 1 \n");
     // int x;

@@ -7,6 +7,7 @@
 #include <sys/msg.h>
 #include <ctype.h>
 #include <stdlib.h>
+#include <signal.h>
 
 int KEY;
 int CLIENT_KEY_ID;
@@ -279,64 +280,79 @@ void loggedInMenu() {
 
   struct Msg message;
 
-  while(1) {
-    if (msgrcv(CLIENT_KEY_ID, &message, sizeof(message), 1, IPC_NOWAIT) != -1) {
-      break;
+  int childPID = fork();
+  if (childPID == 0) {
+    while(1) {
+      if (msgrcv(CLIENT_KEY_ID, &message, sizeof(message), 1, IPC_NOWAIT) != -1) {
+        break;
+      }
+      if (msgrcv(CLIENT_KEY_ID, &message, sizeof(message), 2, IPC_NOWAIT) != -1) {
+        struct ConnectMsg connect;
+        printf("Podana nazwa się powtarza!\n");
+        char name[20];
+        getUserName(name);
+        connect.mtype = 1;
+        strcpy(connect.name,name);
+        connect.clientKeyId = CLIENT_KEY_ID;
+        msgsnd(KEY, &connect, sizeof(connect),0);
+      }
     }
-    if (msgrcv(CLIENT_KEY_ID, &message, sizeof(message), 2, IPC_NOWAIT) != -1) {
-      struct ConnectMsg connect;
-      printf("Podana nazwa się powtarza!\n");
-      char name[20];
-      getUserName(name);
-      connect.mtype = 1;
-      strcpy(connect.name,name);
-      connect.clientKeyId = CLIENT_KEY_ID;
-      msgsnd(KEY, &connect, sizeof(connect),0);
+    if(strcmp(message.message,"Poloczono z serwerem\n") == 0) {
+      printf("%s", message.message);
+    } else {
+      printf("%s", message.message);
+      return;
     }
-  }
-  if(strcmp(message.message,"Poloczono z serwerem\n") == 0) {
-    printf("%s", message.message);
-  } else {
-    printf("%s", message.message);
-    return;
-  }
-  
+    
 
-  while(1){
-    printf("[1] Wyswietl liste kanalow\n[2] Wyswietl liste uzytkownikow\n[3] Dolacz do pokoju\n[4] Stworz nowy pokoj\n[9] Wyloguj sie\n[0] Wyjdz\nCo chcesz zrobic: ");
-    int operation;
-    scanf("%d",&operation);
-    switch (operation) {
-      case 1:
-        printf("Lista kanalow: \n");
-        getChannelList();
+    while(1){
+      printf("[1] Wyswietl liste kanalow\n[2] Wyswietl liste uzytkownikow\n[3] Dolacz do pokoju\n[4] Stworz nowy pokoj\n[9] Wyloguj sie\n[0] Wyjdz\nCo chcesz zrobic: ");
+      int operation;
+      scanf("%d",&operation);
+      switch (operation) {
+        case 1:
+          printf("Lista kanalow: \n");
+          getChannelList();
+          break;
         break;
-      break;
-      case 9:
-        if(disconnectFromServer() == 0) {
-          sleep(1);
-          printf("Odlaczono od serwera clientKeyId: %d\n",CLIENT_KEY_ID);
-          msgctl(CLIENT_KEY_ID, IPC_RMID,0);
-        }
+        case 9:
+          if(disconnectFromServer() == 0) {
+            sleep(1);
+            printf("Odlaczono od serwera clientKeyId: %d\n",CLIENT_KEY_ID);
+            msgctl(CLIENT_KEY_ID, IPC_RMID,0);
+          }
+          return;
+        case 0:
+          if(disconnectFromServer() == 0) {
+            sleep(1);
+            printf("Odlaczono od serwera clientKeyId: %d\n",CLIENT_KEY_ID);
+            msgctl(CLIENT_KEY_ID, IPC_RMID,0);
+          }
+          exit(0);
+          break;
+        case 2:
+          printf("Lista uzytkownikow: \n");
+          getClientList();
+          break;
+        case 3:
+          joinRoom();
+          break;
+        case 4:
+          addRoom();
+          break;
+      }
+    }
+  } else {
+    while(1) {
+      if (msgrcv(CLIENT_KEY_ID,&message, sizeof(message),10,IPC_NOWAIT) != -1) {
+        printf("\nWyrzucono cie z serwera z powodu nieaktywnosci\n");
+        sleep(1);
+        kill(childPID,SIGTERM);
         return;
-      case 0:
-        if(disconnectFromServer() == 0) {
-          sleep(1);
-          printf("Odlaczono od serwera clientKeyId: %d\n",CLIENT_KEY_ID);
-          msgctl(CLIENT_KEY_ID, IPC_RMID,0);
-        }
-        exit(0);
-        break;
-      case 2:
-        printf("Lista uzytkownikow: \n");
-        getClientList();
-        break;
-      case 3:
-        joinRoom();
-        break;
-      case 4:
-        addRoom();
-        break;
+      } else {
+        printf("\nBruh\n");
+        sleep(1);
+      }
     }
   }
 }

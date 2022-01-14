@@ -13,6 +13,7 @@ Client mtype:
     7 - wysyłanie/odbieranie wiadomosci prywatnych
     8 - wysyłanie/odbieranie wiadomosci kanału
     9 - dodawanie pokoju
+    10 - heartbeat
 Server mtype:
     1 - łączenie się klienta
     2 - rozłączanie klienta

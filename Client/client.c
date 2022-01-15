@@ -350,7 +350,7 @@ void loggedInMenu() {
         kill(childPID,SIGTERM);
         return;
       } else {
-        printf("\nBruh\n");
+        // printf("\nBruh\n");
         sleep(1);
       }
     }

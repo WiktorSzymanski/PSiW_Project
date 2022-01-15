@@ -68,6 +68,14 @@ struct Server {
   struct Room roomList[5];
 } THIS_SERVER;
 
+void catchActivity(int clientKeyId) {
+  for (int i = 0; i < sizeof(SERVER_LIST[0].clientList)/sizeof(SERVER_LIST[0].clientList[0]); i++) {
+    if (SERVER_LIST[0].clientList[i].clientKeyId == clientKeyId) {
+      SERVER_LIST[0].clientList[i].secOfInactivity = 0;
+    }
+  }
+}
+
 void printClient(struct Client toPrint) {
   printf("%s\t%d\tsecOfInactivity:%d\n",toPrint.name,toPrint.clientKeyId,toPrint.secOfInactivity);
 }
@@ -196,6 +204,7 @@ void removeClientFromRoom() {
             char name[20] = "                    ";
             strcpy(SERVER_LIST[0].roomList[i].clientListNames[j],name);
             msgsnd(leave.clientKeyId, &leave, sizeof(leave), 0);
+            catchActivity(leave.clientKeyId);
             break;
           }
         }
@@ -210,6 +219,7 @@ void removeClientFromRoom() {
 void getAndSendMsg() {
   struct Msg message;
   if(msgrcv(KEY, &message, sizeof(message), 7, IPC_NOWAIT) != -1) {
+    catchActivity(message.clientKeyId);
     for(int i = 0; i < sizeof(SERVER_LIST[0].roomList)/sizeof(SERVER_LIST[0].roomList[0]); i++) {
       if(SERVER_LIST[0].roomList[i].id == message.roomId) {
         for(int j = 0; j < sizeof(SERVER_LIST[0].roomList[i].clientListId)/sizeof(SERVER_LIST[0].roomList[i].clientListId[0]); j++) {
@@ -240,6 +250,7 @@ void getAndSendMsg() {
 void getAndSendRoomMsg() {
   struct Msg message;
   if(msgrcv(KEY, &message, sizeof(message), 8, IPC_NOWAIT) != -1) {
+    catchActivity(message.clientKeyId);
     for(int i = 0; i < sizeof(SERVER_LIST[0].roomList)/sizeof(SERVER_LIST[0].roomList[0]); i++) {
       if(SERVER_LIST[0].roomList[i].id == message.roomId) {
         for(int j = 0; j < sizeof(SERVER_LIST[0].roomList[i].clientListId)/sizeof(SERVER_LIST[0].roomList[i].clientListId[0]); j++) {
@@ -328,6 +339,7 @@ void sendClientList(){
     }
     clientListMsg.mtype=3;
     msgsnd(clientListMsg.clientKeyId, &clientListMsg, sizeof(clientListMsg), 0);
+    catchActivity(clientListMsg.clientKeyId);
   } else {
     printf("Brak request-u ClientsList\n");
   }
@@ -340,6 +352,7 @@ void sendChannelList(){
       roomMsg.roomList[i] = SERVER_LIST[0].roomList[i];
     }
     msgsnd(roomMsg.clientKeyId, &roomMsg, sizeof(roomMsg), 0);
+    catchActivity(roomMsg.clientKeyId);
   } else {
     printf("Brak request-u ChannelList\n");
   }
@@ -363,6 +376,7 @@ void printRoomsList() {
 void addRooom() {
   struct Msg roomMsg;
   if (msgrcv(KEY, &roomMsg, sizeof(roomMsg), 9, IPC_NOWAIT) != -1) {
+    catchActivity(roomMsg.clientKeyId);
     for(int i = 0; i < sizeof(SERVER_LIST[0].roomList)/sizeof(SERVER_LIST[0].roomList[0]); i++) {
       if (SERVER_LIST[0].roomList[i].id == -1) {
         SERVER_LIST[0].roomList[i].id = i;
@@ -382,6 +396,19 @@ void addRooom() {
   }
 }
 
+void kickFromRoom(int clientKeyId) {
+  printf("Kickin %d\n",clientKeyId);
+  sleep(1);
+  for (int i = 0; i < sizeof(SERVER_LIST[0].roomList)/sizeof(SERVER_LIST[0].roomList[0]); i++) {
+    for (int j = 0; i < sizeof(SERVER_LIST[0].roomList[i].clientListId)/sizeof(SERVER_LIST[0].roomList[i].clientListId[0]);i++) {
+      if (SERVER_LIST[0].roomList[i].clientListId[j] == clientKeyId) {
+        SERVER_LIST[0].roomList[i].clientListId[j] = 0;
+        strcpy(SERVER_LIST[0].roomList[i].clientListNames[j],"\0");
+      }
+    }
+  }
+}
+
 void updateInactivity() {
   for(int i = 0; i < 5; i++) {
     if (SERVER_LIST[0].clientList[i].clientKeyId != 0) {
@@ -391,7 +418,8 @@ void updateInactivity() {
         out.mtype = 10;
         msgsnd(SERVER_LIST[0].clientList[i].clientKeyId, &out, sizeof(out),0);
         printf("Wyslano disconect wiadomosc do %d o mtype %ld\n",SERVER_LIST[0].clientList[i].clientKeyId,out.mtype);
-        sleep(10);
+        sleep(1);
+        kickFromRoom(SERVER_LIST[0].clientList[i].clientKeyId);
         disconnect(SERVER_LIST[0].clientList[i].clientKeyId);
         SERVER_LIST[0].clientList[i].secOfInactivity = 0;
       } else {

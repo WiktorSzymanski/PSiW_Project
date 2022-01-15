@@ -10,10 +10,24 @@
 #include <stdlib.h>
 
 #define CHANNELS 5
-#define MAX_NUM_OF_SEC_OF_INACTIVITY 5
+#define MAX_NUM_OF_SEC_OF_INACTIVITY 40
+
+int counter[CHANNELS] = {0,0,0,0,0};
 
 int KEY;
 struct Server *SERVER_LIST;
+
+struct RoomClientMsg{
+  char name[20];
+  time_t sendTime;
+  char message[1024];
+};
+
+struct RoomBuf{
+  long mtype;
+  int roomId;
+  struct RoomClientMsg roomMsgArray[10];
+} ROOM_BUFFER[5];
 
 struct JoinRoomMsg {
   long mtype;
@@ -67,6 +81,52 @@ struct Server {
   struct Client clientList[5];
   struct Room roomList[5];
 } THIS_SERVER;
+
+
+void addMsgToBuf(struct RoomClientMsg newMsg, int i) {
+  printf("wiadomosc %s \n", newMsg.message);
+  int j = 9 - counter[i];
+  // if(ROOM_BUFFER[i].roomMsgArray[j].message[0]==' '){
+  strcpy(ROOM_BUFFER[i].roomMsgArray[j].name, newMsg.name);
+  strcpy(ROOM_BUFFER[i].roomMsgArray[j].message, newMsg.message);
+  ROOM_BUFFER[i].roomMsgArray[0].sendTime = newMsg.sendTime;
+  //  break;
+  // }
+  if (j == 9)
+  {
+
+    for (int k = 9; k >= 1; k--)
+    {
+      strcpy(ROOM_BUFFER[i].roomMsgArray[k].name, ROOM_BUFFER[i].roomMsgArray[k - 1].name);
+      strcpy(ROOM_BUFFER[i].roomMsgArray[k].message, ROOM_BUFFER[i].roomMsgArray[k - 1].message);
+      ROOM_BUFFER[i].roomMsgArray[k].sendTime = ROOM_BUFFER[i].roomMsgArray[k - 1].sendTime;
+    }
+
+    strcpy(ROOM_BUFFER[i].roomMsgArray[0].name, newMsg.name);
+    strcpy(ROOM_BUFFER[i].roomMsgArray[0].message, newMsg.message);
+    ROOM_BUFFER[i].roomMsgArray[0].sendTime = newMsg.sendTime;
+  }
+  //   break;
+  // }
+  if (j < 9)
+  {
+    counter[i] = (counter[i] + 1);
+    j++;
+  }
+}
+
+void sendClientMsg(int room, int clientKeyId) {
+  struct Msg clientMsgList;
+  strcpy(clientMsgList.message, "");
+  for (int i = 9; i >= 0 ;i--) {
+    strcat(clientMsgList.message,ROOM_BUFFER[room].roomMsgArray[i].name);
+    strcat(clientMsgList.message,": ");
+    strcat(clientMsgList.message,ROOM_BUFFER[room].roomMsgArray[i].message);
+    strcat(clientMsgList.message,"\n");
+  }
+  clientMsgList.mtype=5;
+  msgsnd(clientKeyId, &clientMsgList, sizeof(clientMsgList), 0);
+}
 
 void catchActivity(int clientKeyId) {
   for (int i = 0; i < sizeof(SERVER_LIST[0].clientList)/sizeof(SERVER_LIST[0].clientList[0]); i++) {
@@ -177,6 +237,8 @@ void addClientToRoom() {
             getClientNameById(name,join.clientKeyId);
             strcpy(SERVER_LIST[0].roomList[i].clientListNames[j],name);
             msgsnd(join.clientKeyId, &join, sizeof(join), 0);
+            sendClientMsg(join.roomId,join.clientKeyId);
+
             break;
           }
           if (j == 4) {
@@ -253,6 +315,11 @@ void getAndSendRoomMsg() {
     catchActivity(message.clientKeyId);
     for(int i = 0; i < sizeof(SERVER_LIST[0].roomList)/sizeof(SERVER_LIST[0].roomList[0]); i++) {
       if(SERVER_LIST[0].roomList[i].id == message.roomId) {
+        struct RoomClientMsg newMsg;
+        getClientNameById(newMsg.name,message.clientKeyId);
+        strcpy(newMsg.message, message.message);
+        printf("Nazwa uzytkownika %s \n", newMsg.name);
+        addMsgToBuf(newMsg, i);
         for(int j = 0; j < sizeof(SERVER_LIST[0].roomList[i].clientListId)/sizeof(SERVER_LIST[0].roomList[i].clientListId[0]); j++) {
           if(SERVER_LIST[0].roomList[i].clientListId[j] != 0 && SERVER_LIST[0].roomList[i].clientListId[j] != message.clientKeyId) {
             char name[20];
@@ -400,7 +467,7 @@ void kickFromRoom(int clientKeyId) {
   printf("Kickin %d\n",clientKeyId);
   sleep(1);
   for (int i = 0; i < sizeof(SERVER_LIST[0].roomList)/sizeof(SERVER_LIST[0].roomList[0]); i++) {
-    for (int j = 0; i < sizeof(SERVER_LIST[0].roomList[i].clientListId)/sizeof(SERVER_LIST[0].roomList[i].clientListId[0]);i++) {
+    for (int j = 0; j < sizeof(SERVER_LIST[0].roomList[i].clientListId)/sizeof(SERVER_LIST[0].roomList[i].clientListId[0]); j++) {
       if (SERVER_LIST[0].roomList[i].clientListId[j] == clientKeyId) {
         SERVER_LIST[0].roomList[i].clientListId[j] = 0;
         strcpy(SERVER_LIST[0].roomList[i].clientListNames[j],"\0");
@@ -450,6 +517,17 @@ int main() {
       strcpy(*newRoom.clientListNames,name);
     }
     SERVER_LIST[0].roomList[i] = newRoom;
+  }
+
+  for(int i=0;i<5;i++){
+    ROOM_BUFFER[i].roomId = i;
+    struct RoomClientMsg newMsg;
+    for(int j = 0;j<10;j++){
+
+      newMsg.message[0] = '\0';
+      newMsg.name[0]= '\0';
+      ROOM_BUFFER[i].roomMsgArray[j] = newMsg;
+    }
   }
 
   while(1) {

@@ -254,6 +254,7 @@ void addRoom() {
 void joinRoom() {
   // TODO - co jesli wpisze id pokoju którego nie ma?
   struct JoinRoomMsg join;
+  struct Msg chatMsg;
   join.mtype = 5;
   join.clientKeyId = CLIENT_KEY_ID;
 
@@ -270,6 +271,8 @@ void joinRoom() {
     printf("Pokoj jest pelen!\n");
   } else {
     printf("Dolaczono do pokoju o id %d\n",roomId);
+    msgrcv(CLIENT_KEY_ID, &chatMsg, sizeof(chatMsg), 5, 0);
+    printf("Ostatnie 10 wiadomosci zapisane w buforze\n%s", chatMsg.message);
     inRoom(roomId);
   }
 }

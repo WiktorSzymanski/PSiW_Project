@@ -8,6 +8,7 @@
 #include <ctype.h>
 #include <stdlib.h>
 #include <signal.h>
+#include <time.h>
 
 int KEY;
 int CLIENT_KEY_ID;
@@ -43,6 +44,7 @@ struct Msg {
   int clientKeyId;
   char toClientName[20];
   int roomId;
+  char time[10];
 };
 
 int length(char* string) {
@@ -194,6 +196,10 @@ void inRoom(int roomId) {
       size_t len = 0;
       getline(&line,&len,stdin);
       struct Msg message;
+
+      time_t seconds;
+      struct tm *timeStruct;
+
       
       if(line[0] == ':') {
         if(line[1] == 'q') {
@@ -213,12 +219,24 @@ void inRoom(int roomId) {
           message.roomId = roomId;
           strcpy(message.message,str3);
           strcpy(message.toClientName,str1);
+
+          seconds = time(NULL);
+          timeStruct = localtime(&seconds);
+
+          sprintf(message.time,"%02d:%02d:%02d", timeStruct->tm_hour, timeStruct->tm_min, timeStruct->tm_sec);
+
           msgsnd(KEY, &message, sizeof(message), 0);
         }
       } else {
         message.mtype = 8;
         message.clientKeyId = CLIENT_KEY_ID;
         message.roomId = roomId;
+
+        seconds = time(NULL);
+        timeStruct = localtime(&seconds);
+
+        sprintf(message.time,"%02d:%02d:%02d", timeStruct->tm_hour, timeStruct->tm_min, timeStruct->tm_sec);
+
         strcpy(message.message,line);
         msgsnd(KEY, &message, sizeof(message), 0);
       }
@@ -227,9 +245,9 @@ void inRoom(int roomId) {
     struct Msg message;
     while(1) {
       if (msgrcv(CLIENT_KEY_ID, &message, sizeof(message), 7, IPC_NOWAIT) != -1) {
-        printf("Private Message from %s: %s\n",message.toClientName,message.message);
+        printf("%s Private Message from %s: %s\n",message.time,message.toClientName,message.message);
       } else if (msgrcv(CLIENT_KEY_ID, &message, sizeof(message), 8, IPC_NOWAIT) != -1) {
-        printf("%s: %s",message.toClientName, message.message);
+        printf("%s %s: %s",message.time,message.toClientName, message.message);
       } else {
         // printf("\n");
         sleep(0.01);

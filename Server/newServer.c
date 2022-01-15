@@ -19,7 +19,7 @@ struct Server *SERVER_LIST;
 
 struct RoomClientMsg{
   char name[20];
-  time_t sendTime;
+  char time[10];
   char message[1024];
 };
 
@@ -53,6 +53,7 @@ struct Msg {
   int clientKeyId;
   char toClientName[20];
   int roomId;
+  char time[10];
 };
 
 // struct MessageData {
@@ -89,7 +90,8 @@ void addMsgToBuf(struct RoomClientMsg newMsg, int i) {
   // if(ROOM_BUFFER[i].roomMsgArray[j].message[0]==' '){
   strcpy(ROOM_BUFFER[i].roomMsgArray[j].name, newMsg.name);
   strcpy(ROOM_BUFFER[i].roomMsgArray[j].message, newMsg.message);
-  ROOM_BUFFER[i].roomMsgArray[0].sendTime = newMsg.sendTime;
+  strcpy(ROOM_BUFFER[i].roomMsgArray[j].time, newMsg.time);
+  printf("Time: %s\n",ROOM_BUFFER[i].roomMsgArray[j].time);
   //  break;
   // }
   if (j == 9)
@@ -99,12 +101,12 @@ void addMsgToBuf(struct RoomClientMsg newMsg, int i) {
     {
       strcpy(ROOM_BUFFER[i].roomMsgArray[k].name, ROOM_BUFFER[i].roomMsgArray[k - 1].name);
       strcpy(ROOM_BUFFER[i].roomMsgArray[k].message, ROOM_BUFFER[i].roomMsgArray[k - 1].message);
-      ROOM_BUFFER[i].roomMsgArray[k].sendTime = ROOM_BUFFER[i].roomMsgArray[k - 1].sendTime;
+      strcpy(ROOM_BUFFER[i].roomMsgArray[k].time, ROOM_BUFFER[i].roomMsgArray[k - 1].time);
     }
 
     strcpy(ROOM_BUFFER[i].roomMsgArray[0].name, newMsg.name);
     strcpy(ROOM_BUFFER[i].roomMsgArray[0].message, newMsg.message);
-    ROOM_BUFFER[i].roomMsgArray[0].sendTime = newMsg.sendTime;
+    strcpy(ROOM_BUFFER[i].roomMsgArray[0].time, newMsg.time);
   }
   //   break;
   // }
@@ -119,6 +121,8 @@ void sendClientMsg(int room, int clientKeyId) {
   struct Msg clientMsgList;
   strcpy(clientMsgList.message, "");
   for (int i = 9; i >= 0 ;i--) {
+    strcat(clientMsgList.message,ROOM_BUFFER[room].roomMsgArray[i].time);
+    strcat(clientMsgList.message," ");
     strcat(clientMsgList.message,ROOM_BUFFER[room].roomMsgArray[i].name);
     strcat(clientMsgList.message,": ");
     strcat(clientMsgList.message,ROOM_BUFFER[room].roomMsgArray[i].message);
@@ -318,6 +322,7 @@ void getAndSendRoomMsg() {
         struct RoomClientMsg newMsg;
         getClientNameById(newMsg.name,message.clientKeyId);
         strcpy(newMsg.message, message.message);
+        strcpy(newMsg.time, message.time);
         printf("Nazwa uzytkownika %s \n", newMsg.name);
         addMsgToBuf(newMsg, i);
         for(int j = 0; j < sizeof(SERVER_LIST[0].roomList[i].clientListId)/sizeof(SERVER_LIST[0].roomList[i].clientListId[0]); j++) {

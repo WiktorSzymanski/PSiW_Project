@@ -10,7 +10,7 @@
 #include <stdlib.h>
 
 #define CHANNELS 5
-#define MAX_NUM_OF_SEC_OF_INACTIVITY 40
+#define MAX_NUM_OF_SEC_OF_INACTIVITY 10
 
 int counter[CHANNELS] = {0,0,0,0,0};
 
@@ -252,6 +252,10 @@ void addClientToRoom() {
           }
         }
         break;
+      }
+      if (i == sizeof(SERVER_LIST[0].roomList)/sizeof(SERVER_LIST[0].roomList[0]) - 1) {
+        join.roomId = -2;
+        msgsnd(join.clientKeyId, &join, sizeof(join), 0);
       }
     }
   } else {

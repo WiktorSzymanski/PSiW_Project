@@ -76,7 +76,8 @@ void getUserName(char* s) {
   char name[20];
   printf("Podaj nazwe uzytkownika \n");
   scanf("%s", name);
-  if(length(name) > 20) {
+  if(length(name) > 20 || length(name) < 6) {
+    printf("Nazwa musi mieć conajmniej 6 znaków i nie więcej jak 20!\n");
     getUserName(name);
   }
   name[20] = '\0';
@@ -204,6 +205,7 @@ void inRoom(int roomId) {
       if(line[0] == ':') {
         if(line[1] == 'q') {
           printf("Wychodzenie z pokoju\n");
+          kill(-getppid(),SIGTERM);
           leaveRoom(roomId);
           return;
         }
@@ -270,7 +272,6 @@ void addRoom() {
 }
 
 void joinRoom() {
-  // TODO - co jesli wpisze id pokoju którego nie ma?
   struct JoinRoomMsg join;
   struct Msg chatMsg;
   join.mtype = 5;
@@ -285,8 +286,10 @@ void joinRoom() {
 
   msgsnd(KEY, &join, sizeof(join), 0);
   msgrcv(CLIENT_KEY_ID, &join, sizeof(join), 5, 0);
-  if (join.roomId == -1) {
-    printf("Pokoj jest pelen!\n");
+  if (join.roomId == -2) {
+    printf("Brak pokoju o takim id!\n\n");
+  } else if (join.roomId == -1) {
+    printf("Pokoj jest pelen!\n\n");
   } else {
     printf("Dolaczono do pokoju o id %d\n",roomId);
     msgrcv(CLIENT_KEY_ID, &chatMsg, sizeof(chatMsg), 5, 0);
@@ -341,15 +344,17 @@ void loggedInMenu() {
             sleep(1);
             printf("Odlaczono od serwera clientKeyId: %d\n",CLIENT_KEY_ID);
             msgctl(CLIENT_KEY_ID, IPC_RMID,0);
+            return;
           }
-          return;
+          break;
         case 0:
           if(disconnectFromServer() == 0) {
             sleep(1);
             printf("Odlaczono od serwera clientKeyId: %d\n",CLIENT_KEY_ID);
             msgctl(CLIENT_KEY_ID, IPC_RMID,0);
+            kill(-getpid(),SIGTERM);
+            exit(0);
           }
-          exit(0);
           break;
         case 2:
           printf("Lista uzytkownikow: \n");
@@ -368,10 +373,9 @@ void loggedInMenu() {
       if (msgrcv(CLIENT_KEY_ID,&message, sizeof(message),10,IPC_NOWAIT) != -1) {
         printf("\nWyrzucono cie z serwera z powodu nieaktywnosci\n");
         sleep(1);
-        kill(childPID,SIGTERM);
+        kill(-getpid(),SIGTERM);
         return;
       } else {
-        // printf("\nBruh\n");
         sleep(1);
       }
     }
@@ -380,7 +384,7 @@ void loggedInMenu() {
 
 int main() {
   while(1){
-    printf("[0] Wyjdz\n[1] Zaloguj sie\nCo chcesz zrobic: ");
+    printf("[1] Zaloguj sie\n[0] Wyjdz\nCo chcesz zrobic: ");
     int operation;
     scanf("%d",&operation);
     switch (operation) {
@@ -389,6 +393,7 @@ int main() {
         break;
       case 0:
         printf("Wychodznie z programu\n");
+        kill(-getpid(),SIGTERM);
         exit(0);
         break;
     }

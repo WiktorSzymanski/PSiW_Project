@@ -56,14 +56,8 @@ struct Msg {
   char time[10];
 };
 
-// struct MessageData {
-//   char message[1024];
-//   char clientName[20];
-// }
-
 struct Room{
   int id;
-  int numOfClients;
   int clientListId[5];
   char clientListNames[5][20];
 };
@@ -77,8 +71,6 @@ struct RoomListMsg {
 struct Server {
   char name[10];
   int id;
-  int numOfClients;
-  int numOfRooms;
   struct Client clientList[5];
   struct Room roomList[5];
 } THIS_SERVER;
@@ -352,20 +344,11 @@ int checkIfClientIsValid(struct Client newClient) {
   if (!checkIfNameUniq(newClient.name)) {
     printf("Nazwa %s sie powtarza\n",newClient.name);
     sendUniqNameReq(newClient.clientKeyId);
-    // printf("Wpisz 1 \n");
-    // int x;
-    // scanf("%d",&x);
-
     check++;
   }
 
   if (!checkIfKeyIdUniq(newClient.clientKeyId)) {
     printf("mType %d sie powtarza\n",newClient.clientKeyId);
-
-    // printf("Wpisz 1 \n");
-    // int x;
-    // scanf("%d",&x);
-
     check++;
   }
 

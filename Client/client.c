@@ -191,7 +191,20 @@ void inRoom(int roomId) {
   printf(":q - wyjdz z pokoju\n");
   printf(":p <nazwa klienta> <wiadomosc> - wyslij wiadomosc prywadna\n");
   
-  if(fork() == 0) {
+  int childPID = fork();
+  if(childPID == 0) {
+    struct Msg message;
+    while(1) {
+      if (msgrcv(CLIENT_KEY_ID, &message, sizeof(message), 7, IPC_NOWAIT) != -1) {
+        printf("%s Private Message from %s: %s\n",message.time,message.toClientName,message.message);
+      } else if (msgrcv(CLIENT_KEY_ID, &message, sizeof(message), 8, IPC_NOWAIT) != -1) {
+        printf("%s %s: %s",message.time,message.toClientName, message.message);
+      } else {
+        // printf("\n");
+        sleep(0.01);
+      }
+    }
+  } else {
     while(1) {
       char *line = NULL;
       size_t len = 0;
@@ -205,8 +218,8 @@ void inRoom(int roomId) {
       if(line[0] == ':') {
         if(line[1] == 'q') {
           printf("Wychodzenie z pokoju\n");
-          kill(-getppid(),SIGTERM);
           leaveRoom(roomId);
+          kill(childPID,SIGTERM);
           return;
         }
 
@@ -241,18 +254,6 @@ void inRoom(int roomId) {
 
         strcpy(message.message,line);
         msgsnd(KEY, &message, sizeof(message), 0);
-      }
-    }
-  } else {
-    struct Msg message;
-    while(1) {
-      if (msgrcv(CLIENT_KEY_ID, &message, sizeof(message), 7, IPC_NOWAIT) != -1) {
-        printf("%s Private Message from %s: %s\n",message.time,message.toClientName,message.message);
-      } else if (msgrcv(CLIENT_KEY_ID, &message, sizeof(message), 8, IPC_NOWAIT) != -1) {
-        printf("%s %s: %s",message.time,message.toClientName, message.message);
-      } else {
-        // printf("\n");
-        sleep(0.01);
       }
     }
   }
@@ -352,8 +353,10 @@ void loggedInMenu() {
             sleep(1);
             printf("Odlaczono od serwera clientKeyId: %d\n",CLIENT_KEY_ID);
             msgctl(CLIENT_KEY_ID, IPC_RMID,0);
-            kill(-getpid(),SIGTERM);
+            printf("Zrobilem EXIT-a\n");
+            kill(getppid(),SIGTERM);
             exit(0);
+            printf("Zrobilem EXIT-a\n");
           }
           break;
         case 2:
@@ -373,8 +376,8 @@ void loggedInMenu() {
       if (msgrcv(CLIENT_KEY_ID,&message, sizeof(message),10,IPC_NOWAIT) != -1) {
         printf("\nWyrzucono cie z serwera z powodu nieaktywnosci\n");
         sleep(1);
-        kill(-getpid(),SIGTERM);
-        return;
+        kill(childPID,SIGTERM);
+        exit(0);
       } else {
         sleep(1);
       }
@@ -393,7 +396,7 @@ int main() {
         break;
       case 0:
         printf("Wychodznie z programu\n");
-        kill(-getpid(),SIGTERM);
+        kill(getppid(),SIGTERM);
         exit(0);
         break;
     }

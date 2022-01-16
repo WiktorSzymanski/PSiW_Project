@@ -1,0 +1,47 @@
+Client mtype:
+    1 - prośba o dołączenie
+    2 - informacja serwera o zajętej nazwie urzytkownika
+    3 - lista urzytkownikow
+    4 - lista pokoi
+    5 - dołączanie do pokoi
+    6 - wychodzenie z pokoju
+    7 - wysyłanie/odbieranie wiadomosci prywatnych
+    8 - wysyłanie/odbieranie wiadomosci kanału
+    9 - dodawanie pokoju
+    10 - heartbeat
+Server mtype:
+    1 - łączenie się klienta
+    2 - rozłączanie klienta
+    3 - lista urzytkownikow
+    4 - lista pokoi
+    5 - dołączanie do pokoi
+    6 - wychodzenie z pokoju
+    7 - wysyłanie/odbieranie wiadomosci prywatnych
+    8 - wysyłanie/odbieranie wiadomosci kanału
+    9 - dodawanie pokoju
+
+
+Aplikacja klient - serwer
+Każdy klient ma swoją osobną kolejkę komunikatów do komunikacji z serwerem. Klient towrzy kolejke i wysyła jej id serwerowi.
+Serwer po otrzymaniu wiadomosci jesli klient nie ma powtarzającej się nazwy dodaje go do listy użytkowników tego serwera.
+Różne operacje/requesty od użytkownika mają różne mtype dzięki czemu serwer wie o jakie dane/operacje prosi użytkownik.
+
+Używane struktury:
+
+ - RoomClientMsg - zawiera ostatnie wiadomości z danego pokoju
+
+ - RoomBuf - wysyła ostatnie 10 wiadomości do klienta który dołączył do pokoju
+
+ - JoinRoomMsg - wiadomosc potrzebna do dołączenia do pokoju
+
+ - ConnectMsg - wiadomosc potrzebna do utworzenia połączenia z serwerem
+
+ - Client - zawiera dane klienta
+
+ - Msg - wiadomosc, zawiera dane potrzebne do wysłania i odebrania wiadomosci 
+
+ - Room - pokój, zawiera id, dane klientów należących do tego pokoju
+
+ - RoomListMsg - struktura wysyłająca liste pokoi
+
+ - Server - przechowuje dane danego serwera min. pokoje, użytkownicy

@@ -50,7 +50,7 @@ struct Msg {
 
 void clear() {
   if (fork() == 0) {
-      execlp("clear","clear", NULL);
+    execlp("clear","clear", NULL);
   } else {
     wait(NULL);
   }
@@ -65,6 +65,15 @@ int length(char* string) {
     }
     return result - (string[result-1] == '\n');
   }
+}
+
+int isDigit(char input[]) {
+  for(int i = 0; i < length(input); i++) {
+    if(isdigit(input[i]) == 0) {
+      return 0;
+    }
+  }
+  return 1;
 }
 
 void printConnectMsg(struct ConnectMsg toPrint) {
@@ -83,10 +92,10 @@ int disconnectFromServer() {
 
 void getUserName(char* s) {
   char name[20];
-  printf("Podaj nazwe uzytkownika \n");
+  printf("Podaj nazwe uzytkownika (min. 6 max 20 znakow, nazwa nie moze zawierac spacji)\n");
   scanf("%s", name);
   if(length(name) > 20 || length(name) < 6) {
-    printf("Nazwa musi mieć conajmniej 6 znaków i nie więcej jak 20!\n");
+    printf("Nazwa musi mieć conajmniej 6 znaków,nie więcej jak 20 i bez spacji!\n");
     getUserName(name);
   }
   name[20] = '\0';
@@ -318,6 +327,17 @@ void loggedInMenu() {
   int childPID = fork();
   if (childPID == 0) {
     while(1) {
+      if (msgrcv(CLIENT_KEY_ID,&message, sizeof(message),10,IPC_NOWAIT) != -1) {
+        printf("\nWyrzucono cie z serwera z powodu nieaktywnosci\n");
+        sleep(1);
+        kill(getppid(),SIGTERM);
+        exit(0);
+      } else {
+        sleep(1);
+      }
+    }
+  } else {
+    while(1) {
       if (msgrcv(CLIENT_KEY_ID, &message, sizeof(message), 1, IPC_NOWAIT) != -1) {
         break;
       }
@@ -333,34 +353,25 @@ void loggedInMenu() {
       }
     }
     clear();
+    sleep(1);
     if(strcmp(message.message,"Poloczono z serwerem\n") == 0) {
       printf("%s", message.message);
     } else {
       printf("%s", message.message);
       return;
     }
-    
 
     while(1){
       printf("[1] Wyswietl liste kanalow\n[2] Wyswietl liste uzytkownikow\n[3] Dolacz do pokoju\n[4] Stworz nowy pokoj\n[9] Wyloguj sie\n[0] Wyjdz\nCo chcesz zrobic: ");
-      int operation;
-      scanf("%d",&operation);
-      switch (operation) {
-        case 1:
-          clear();
-          printf("Lista kanalow: \n");
-          getChannelList();
-          break;
-        break;
-        case 9:
-          clear();
-          if(disconnectFromServer() == 0) {
-            sleep(1);
-            printf("Odlaczono od serwera clientKeyId: %d\n",CLIENT_KEY_ID);
-            msgctl(CLIENT_KEY_ID, IPC_RMID,0);
-            return;
-          }
-          break;
+      char operation[2];
+      scanf("%s",operation);
+
+      while (isDigit(operation) == 0) {
+        printf("Bledne dane wejsciowe!\nPodaj wlasciwa operacje: ");
+        scanf("%s",operation);
+      }
+
+      switch (atoi(operation)) {
         case 0:
           clear();
           if(disconnectFromServer() == 0) {
@@ -368,9 +379,14 @@ void loggedInMenu() {
             printf("Odlaczono od serwera clientKeyId: %d\n",CLIENT_KEY_ID);
             msgctl(CLIENT_KEY_ID, IPC_RMID,0);
             printf("Wychodznie z programu\n");
-            kill(getppid(),SIGTERM);
+            kill(childPID,SIGTERM);
             exit(0);
           }
+          break;
+        case 1:
+          clear();
+          printf("Lista kanalow: \n");
+          getChannelList();
           break;
         case 2:
           clear();
@@ -384,17 +400,19 @@ void loggedInMenu() {
           clear();
           addRoom();
           break;
-      }
-    }
-  } else {
-    while(1) {
-      if (msgrcv(CLIENT_KEY_ID,&message, sizeof(message),10,IPC_NOWAIT) != -1) {
-        printf("\nWyrzucono cie z serwera z powodu nieaktywnosci\n");
-        sleep(1);
-        kill(childPID,SIGTERM);
-        exit(0);
-      } else {
-        sleep(1);
+        case 9:
+          clear();
+          if(disconnectFromServer() == 0) {
+            sleep(1);
+            printf("Odlaczono od serwera clientKeyId: %d\n",CLIENT_KEY_ID);
+            msgctl(CLIENT_KEY_ID, IPC_RMID,0);
+            kill(childPID,SIGTERM);
+            return;
+          }
+          break;
+        default:
+          printf("Brak takiej operaci!!!\n");
+          break;
       }
     }
   }
@@ -403,9 +421,15 @@ void loggedInMenu() {
 int main() {
   while(1){
     printf("[1] Zaloguj sie\n[0] Wyjdz\nCo chcesz zrobic: ");
-    int operation;
-    scanf("%d",&operation);
-    switch (operation) {
+    char operation[2];
+    scanf("%s",operation);
+
+    while (isDigit(operation) == 0) {
+      printf("Bledne dane wejsciowe!\nPodaj wlasciwa operacje: ");
+      scanf("%s",operation);
+    }
+
+    switch (atoi(operation)) {
       case 1:
         loggedInMenu();
         break;
@@ -413,6 +437,9 @@ int main() {
         printf("Wychodznie z programu\n");
         kill(getppid(),SIGTERM);
         exit(0);
+        break;
+      default:
+        printf("Brak takiej operaci!!!\n");
         break;
     }
   }

@@ -10,7 +10,7 @@
 #include <stdlib.h>
 
 #define CHANNELS 5
-#define MAX_NUM_OF_SEC_OF_INACTIVITY 10
+#define MAX_NUM_OF_SEC_OF_INACTIVITY 30
 
 int counter[CHANNELS] = {0,0,0,0,0};
 

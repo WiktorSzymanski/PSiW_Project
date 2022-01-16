@@ -25,6 +25,7 @@ Aplikacja klient - serwer
 Każdy klient ma swoją osobną kolejkę komunikatów do komunikacji z serwerem. Klient towrzy kolejke i wysyła jej id serwerowi.
 Serwer po otrzymaniu wiadomosci jesli klient nie ma powtarzającej się nazwy dodaje go do listy użytkowników tego serwera.
 Różne operacje/requesty od użytkownika mają różne mtype dzięki czemu serwer wie o jakie dane/operacje prosi użytkownik.
+Serwer moze miec max 5 pokoi, gdzie zaczyna z jednym, a pozostale sa dodawane na rzadanie klienta.
 
 Używane struktury:
 

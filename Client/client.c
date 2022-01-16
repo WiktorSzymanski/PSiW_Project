@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <signal.h>
 #include <time.h>
+#include <wait.h>
 
 int KEY;
 int CLIENT_KEY_ID;
@@ -46,6 +47,14 @@ struct Msg {
   int roomId;
   char time[10];
 };
+
+void clear() {
+  if (fork() == 0) {
+      execlp("clear","clear", NULL);
+  } else {
+    wait(NULL);
+  }
+}
 
 int length(char* string) {
   int result = 0;
@@ -217,6 +226,7 @@ void inRoom(int roomId) {
       
       if(line[0] == ':') {
         if(line[1] == 'q') {
+          clear();
           printf("Wychodzenie z pokoju\n");
           leaveRoom(roomId);
           kill(childPID,SIGTERM);
@@ -282,7 +292,7 @@ void joinRoom() {
   printf("Podaj id pokoju do ktorego chcesz dolaczyc: ");
   scanf("%d",&roomId);
   printf("\n");
-
+  clear();
   join.roomId = roomId;
 
   msgsnd(KEY, &join, sizeof(join), 0);
@@ -322,6 +332,7 @@ void loggedInMenu() {
         msgsnd(KEY, &connect, sizeof(connect),0);
       }
     }
+    clear();
     if(strcmp(message.message,"Poloczono z serwerem\n") == 0) {
       printf("%s", message.message);
     } else {
@@ -336,11 +347,13 @@ void loggedInMenu() {
       scanf("%d",&operation);
       switch (operation) {
         case 1:
+          clear();
           printf("Lista kanalow: \n");
           getChannelList();
           break;
         break;
         case 9:
+          clear();
           if(disconnectFromServer() == 0) {
             sleep(1);
             printf("Odlaczono od serwera clientKeyId: %d\n",CLIENT_KEY_ID);
@@ -349,17 +362,18 @@ void loggedInMenu() {
           }
           break;
         case 0:
+          clear();
           if(disconnectFromServer() == 0) {
             sleep(1);
             printf("Odlaczono od serwera clientKeyId: %d\n",CLIENT_KEY_ID);
             msgctl(CLIENT_KEY_ID, IPC_RMID,0);
-            printf("Zrobilem EXIT-a\n");
+            printf("Wychodznie z programu\n");
             kill(getppid(),SIGTERM);
             exit(0);
-            printf("Zrobilem EXIT-a\n");
           }
           break;
         case 2:
+          clear();
           printf("Lista uzytkownikow: \n");
           getClientList();
           break;
@@ -367,6 +381,7 @@ void loggedInMenu() {
           joinRoom();
           break;
         case 4:
+          clear();
           addRoom();
           break;
       }

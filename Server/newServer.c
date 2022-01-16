@@ -58,6 +58,7 @@ struct Msg {
 
 struct Room{
   int id;
+  int numOfClients;
   int clientListId[5];
   char clientListNames[5][20];
 };
@@ -71,6 +72,8 @@ struct RoomListMsg {
 struct Server {
   char name[10];
   int id;
+  int numOfClients;
+  int numOfRooms;
   struct Client clientList[5];
   struct Room roomList[5];
 } THIS_SERVER;
